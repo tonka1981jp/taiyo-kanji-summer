@@ -50,6 +50,7 @@ export class ResultScene {
           <tr><td>よんだ かいすう</td><td>${summary.utterances}</td></tr>
           <tr><td>せいかい</td><td>${summary.correct}</td></tr>
           <tr><td>さいだいコンボ</td><td>${summary.maxCombo}</td></tr>
+          <tr><td>ヒント</td><td>${summary.hints} 回</td></tr>
           <tr><td>かかった じかん</td><td>${minutes}ふん${seconds}びょう</td></tr>
         </table>
         ${

@@ -90,6 +90,8 @@ export class BattleScene implements BattleRenderer {
           <span class="hear-bars"><i></i><i></i><i></i></span>
         </div>
 
+        <div class="hint-tip">こまったら 「ヒント！」って いってみて</div>
+
         <div id="combo" class="combo"></div>
 
         <div id="impact" class="impact-flash"></div>
@@ -206,9 +208,9 @@ export class BattleScene implements BattleRenderer {
     await delay(600);
   }
 
-  async showHint(text: string): Promise<void> {
-    this.audio.play("answer.retry");
-    this.flash("おしい！ ヒント！", "retry");
+  async showHint(text: string, requested: boolean): Promise<void> {
+    this.audio.play(requested ? "quiz.show" : "answer.retry");
+    this.flash(requested ? "🧙 ヒント！" : "おしい！ ヒント！", requested ? "prompt" : "retry");
     this.hintEl.textContent = text;
     await delay(700);
   }
@@ -229,13 +231,15 @@ export class BattleScene implements BattleRenderer {
     this.flash("よんでみよう！", "prompt");
   }
 
-  async playAttack(damage: number, critical: boolean): Promise<void> {
+  async playAttack(damage: number, critical: boolean, reduced: boolean): Promise<void> {
     this.audio.play(critical ? "battle.critical" : "battle.slash");
 
-    // 画面フラッシュ+画面シェイク(攻撃した感)
-    this.impact(critical ? "crit" : "hit");
+    // 画面フラッシュ+画面シェイク(攻撃した感)。ヒント使用時は控えめにして差を見せる
+    if (!reduced) {
+      this.impact(critical ? "crit" : "hit");
+    }
     this.spawnParticles(
-      critical ? 16 : 9,
+      reduced ? 5 : critical ? 16 : 9,
       critical ? ["#ffd54d", "#ff7b54", "#ffffff"] : ["#ffffff", "#ffe9a0", "#8ecbff"],
     );
 
@@ -247,8 +251,13 @@ export class BattleScene implements BattleRenderer {
     void this.enemySpriteEl.offsetWidth;
     this.enemySpriteEl.classList.add("hit");
 
-    this.damageEl.textContent = critical ? `CRITICAL! ${damage}` : `${damage}`;
+    if (reduced) {
+      this.damageEl.innerHTML = `${damage}<small>ヒントで はんぶん ▼</small>`;
+    } else {
+      this.damageEl.textContent = critical ? `CRITICAL! ${damage}` : `${damage}`;
+    }
     this.damageEl.classList.toggle("critical", critical);
+    this.damageEl.classList.toggle("reduced", reduced);
     this.damageEl.classList.remove("show");
     void this.damageEl.offsetWidth;
     this.damageEl.classList.add("show");

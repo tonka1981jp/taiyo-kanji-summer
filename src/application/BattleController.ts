@@ -49,6 +49,7 @@ export class BattleController {
     ambiguous: 0,
     incorrect: 0,
     skipped: 0,
+    hints: 0,
   };
   private startedAt = Date.now();
 
@@ -154,6 +155,9 @@ export class BattleController {
         this.stats.ambiguous += 1;
         recordSttHit(progress, question.id, "confusion", evaluation.matched);
         break;
+      case "HINT_REQUESTED":
+        this.stats.hints += 1;
+        break;
       case "INCORRECT":
         this.stats.incorrect += 1;
         recordSttHit(
@@ -237,7 +241,7 @@ export class BattleController {
           r.updateCombo(e.combo);
           break;
         case "DAMAGE":
-          await r.playAttack(e.amount, e.critical);
+          await r.playAttack(e.amount, e.critical, e.reduced);
           break;
         case "ENEMY_HP_CHANGED":
           r.updateEnemyHp(e.hp, e.maxHp);
@@ -251,7 +255,7 @@ export class BattleController {
           await r.showRetry(e.reason);
           break;
         case "HINT":
-          await r.showHint(e.text);
+          await r.showHint(e.text, e.requested);
           break;
         case "REVEAL_ANSWER":
           await r.showRevealAnswer(e.reading);

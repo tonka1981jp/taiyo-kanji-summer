@@ -29,6 +29,7 @@ export interface StageSummary {
   stageId: string;
   stageName: string;
   utterances: number;
+  hints: number;
   correct: number;
   ambiguous: number;
   incorrect: number;
@@ -50,13 +51,13 @@ export interface BattleRenderer {
   showHearing(): void;
   showCorrect(): void;
   showRetry(reason: RetryReason): Promise<void>;
-  showHint(text: string): Promise<void>;
+  showHint(text: string, requested: boolean): Promise<void>;
   showRevealAnswer(reading: string): Promise<void>;
   showSkip(reading: string): Promise<void>;
   /** 無言が続いたときの促し(ゲームオーバーにしない) */
   showSilencePrompt(): void;
 
-  playAttack(damage: number, critical: boolean): Promise<void>;
+  playAttack(damage: number, critical: boolean, reduced: boolean): Promise<void>;
   updateEnemyHp(hp: number, maxHp: number): void;
   updateCombo(combo: number): void;
   playEnemyDefeat(name: string): Promise<void>;

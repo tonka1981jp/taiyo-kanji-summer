@@ -7,8 +7,13 @@ import { TranscriptNormalizer } from "./TranscriptNormalizer";
 export type EvaluationResult =
   | { type: "CORRECT"; normalizedTranscript: string; matched: string }
   | { type: "STT_AMBIGUOUS"; normalizedTranscript: string; matched: string }
+  /** 「ヒント！」などの声のヘルプ要求(誤答ではない) */
+  | { type: "HINT_REQUESTED"; normalizedTranscript: string }
   | { type: "INCORRECT"; normalizedTranscript: string }
   | { type: "NO_SPEECH" };
+
+/** ヒント要求とみなす語彙(正規化後) */
+export const HINT_WORDS = ["ひんと", "わからない", "わかんない", "おしえて"];
 
 export class AnswerEvaluator {
   private normalizer = new TranscriptNormalizer();
@@ -34,6 +39,11 @@ export class AnswerEvaluator {
         normalizedTranscript: normalized[0],
         matched: accepted,
       };
+    }
+
+    // 正解でないなら、ヒント要求(声のヘルプ)かどうかを先に見る
+    if (normalized.some((t) => HINT_WORDS.some((w) => t.includes(w)))) {
+      return { type: "HINT_REQUESTED", normalizedTranscript: normalized[0] };
     }
 
     const confusion = this.match(normalized, question.sttConfusions);

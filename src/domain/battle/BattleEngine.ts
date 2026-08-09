@@ -21,6 +21,9 @@ export class BattleEngine {
   private ambiguousCount = 0;
   /** 答えを見せた後か(復唱フェーズ) */
   private revealed = false;
+  /** この問題で「ヒント！」を使ったか(ダメージ半減 §ヒント経済) */
+  private hintUsed = false;
+  private hintRequestCount = 0;
 
   maxCombo = 0;
 
@@ -47,6 +50,8 @@ export class BattleEngine {
     this.failCount = 0;
     this.ambiguousCount = 0;
     this.revealed = false;
+    this.hintUsed = false;
+    this.hintRequestCount = 0;
   }
 
   submitEvaluation(result: EvaluationResult, reading: string): BattleEvent[] {
@@ -55,6 +60,8 @@ export class BattleEngine {
         return this.handleCorrect();
       case "STT_AMBIGUOUS":
         return this.handleAmbiguous(reading);
+      case "HINT_REQUESTED":
+        return this.handleHintRequest(reading);
       case "INCORRECT":
         return this.handleIncorrect(reading);
       case "NO_SPEECH":
@@ -66,9 +73,22 @@ export class BattleEngine {
     const events: BattleEvent[] = [{ type: "ANSWER_CORRECT" }];
 
     let roll;
+    let reduced = false;
     if (this.revealed) {
       // 復唱正解: 攻撃は出すが控えめ。コンボは増やさない
       roll = this.damageCalc.rollAfterReveal();
+      reduced = true;
+    } else if (this.hintUsed) {
+      // ヒント使用後の正解: ダメージ半減・コンボ維持(増えない)・クリティカルなし
+      const base = this.damageCalc.roll(
+        this.comboSystem.current,
+        this.comboSystem.multiplier,
+      );
+      roll = {
+        amount: Math.max(1, Math.round(base.amount * 0.5)),
+        critical: false,
+      };
+      reduced = true;
     } else {
       const combo = this.comboSystem.increment();
       this.maxCombo = Math.max(this.maxCombo, combo);
@@ -76,7 +96,7 @@ export class BattleEngine {
       roll = this.damageCalc.roll(combo, this.comboSystem.multiplier);
     }
 
-    events.push({ type: "DAMAGE", amount: roll.amount, critical: roll.critical });
+    events.push({ type: "DAMAGE", amount: roll.amount, critical: roll.critical, reduced });
 
     this.enemyHp = Math.max(0, this.enemyHp - roll.amount);
     const encounter = this.stage.encounters[this.encounterIndex];
@@ -114,7 +134,8 @@ export class BattleEngine {
       return [{ type: "RETRY", reason: "incorrect" }];
     }
     if (this.failCount === 2) {
-      return [{ type: "HINT", text: maskReading(reading) }];
+      this.hintUsed = true;
+      return [{ type: "HINT", text: maskReading(reading), requested: false }];
     }
     if (this.failCount === 3) {
       this.revealed = true;
@@ -122,6 +143,17 @@ export class BattleEngine {
     }
     // 復唱もできない場合の最終救済(§21 進行不能禁止)
     return [{ type: "QUESTION_SKIPPED", reading }];
+  }
+
+  /** 「ヒント！」音声コマンド: 1回目=マスクヒント、2回目以降=答え+復唱 */
+  private handleHintRequest(reading: string): BattleEvent[] {
+    this.hintRequestCount += 1;
+    this.hintUsed = true;
+    if (this.hintRequestCount === 1 && !this.revealed) {
+      return [{ type: "HINT", text: maskReading(reading), requested: true }];
+    }
+    this.revealed = true;
+    return [{ type: "REVEAL_ANSWER", reading }];
   }
 
   private nextEncounter(): BattleEvent[] {
