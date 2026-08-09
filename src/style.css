@@ -183,7 +183,7 @@ body {
   -webkit-overflow-scrolling: touch;
   padding-top: calc(env(safe-area-inset-top) + 30px);
   background:
-    url("/game/bg/title.jpg") center / cover no-repeat,
+    url("../game/bg/title.jpg") center / cover no-repeat,
     linear-gradient(180deg, #8fd3f4 0%, #79c25f 100%);
 }
 
@@ -374,14 +374,14 @@ body {
 
 .battle-screen.world1 {
   background:
-    url("/game/bg/world1.jpg") center / cover no-repeat,
+    url("../game/bg/world1.jpg") center / cover no-repeat,
     linear-gradient(180deg, #8fd3f4 0%, #79c25f 60%, #37803a 100%);
   color: var(--ink);
 }
 
 .battle-screen.world2 {
   background:
-    url("/game/bg/world2.jpg") center / cover no-repeat,
+    url("../game/bg/world2.jpg") center / cover no-repeat,
     linear-gradient(180deg, #2e4a33 0%, #1e3526 60%, #14261b 100%);
   color: var(--ink);
 }
@@ -621,7 +621,7 @@ body {
 
 .kanji-card {
   position: relative;
-  background: url("/game/ui/kanji_card.png") center / 100% 100% no-repeat;
+  background: url("../game/ui/kanji_card.png") center / 100% 100% no-repeat;
   color: var(--card-text);
   border: none;
   border-radius: 18px;

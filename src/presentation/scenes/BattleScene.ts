@@ -1,3 +1,4 @@
+import { assetUrl } from "../../assetUrl";
 import type {
   BattleRenderer,
   DebugInfo,
@@ -67,8 +68,8 @@ export class BattleScene implements BattleRenderer {
 
         <div class="enemy-area" id="enemy-area">
           <div id="enemy-sprite" class="enemy-sprite"></div>
-          <img id="slash" class="slash-img" src="/game/fx/slash.png" alt="" />
-          <img id="critfx" class="crit-img" src="/game/fx/critical.png" alt="" />
+          <img id="slash" class="slash-img" src="${assetUrl("game/fx/slash.png")}" alt="" />
+          <img id="critfx" class="crit-img" src="${assetUrl("game/fx/critical.png")}" alt="" />
           <div id="burst" class="burst-ring"></div>
           <div id="particles" class="particles"></div>
           <div id="enemy-name" class="enemy-name"></div>

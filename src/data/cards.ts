@@ -1,3 +1,4 @@
+import { assetUrl } from "../assetUrl";
 import { ENEMY_MAP, ENEMY_SKINS } from "./enemies";
 
 // カードの見た目定義。
@@ -37,7 +38,7 @@ export function kanjiCardLook(kanji: string): KanjiCardLook {
   const h = stableHash(kanji);
   const bg = CARD_BG_NAMES[h % CARD_BG_COUNT];
   return {
-    bgUrl: `/game/cards/${bg}.jpg`,
+    bgUrl: assetUrl(`game/cards/${bg}.jpg`),
     hue: (h >> 3) % 360,
     shineAngle: 100 + ((h >> 7) % 60),
   };
@@ -63,9 +64,9 @@ export const DROP_RATES: Record<Rarity, number> = {
 };
 
 const RARE_CARD_BG: Record<Rarity, string> = {
-  R: "/game/cards/meadow.jpg",
-  SR: "/game/cards/gold.jpg",
-  SSR: "/game/cards/starlight.jpg",
+  R: assetUrl("game/cards/meadow.jpg"),
+  SR: assetUrl("game/cards/gold.jpg"),
+  SSR: assetUrl("game/cards/starlight.jpg"),
 };
 
 /** バトルに登場する敵のカード(7種) */
@@ -89,7 +90,7 @@ const battleCards: RareCardDef[] = [...ENEMY_MAP.values()].map((def) => {
 const creature = (id: string, name: string, rarity: Rarity): RareCardDef => ({
   id,
   name,
-  image: `/game/enemies/${id}.png`,
+  image: assetUrl(`game/enemies/${id}.png`),
   rarity,
   bgUrl: RARE_CARD_BG[rarity],
 });

@@ -1,3 +1,4 @@
+import { assetUrl } from "../../assetUrl";
 import type { StageDefinition } from "../../domain/battle/StageDefinition";
 import type { PlayerProgress } from "../../domain/progression/PlayerProgress";
 import type { AudioManager } from "../../infrastructure/audio/AudioManager";
@@ -63,9 +64,9 @@ export class TitleScene {
         </div>
 
         <div class="title-heroes">
-          <img class="hero-sprite small bob1" src="/game/enemies/slime.png" alt="" draggable="false" />
-          <img class="hero-sprite dragon bob2" src="/game/enemies/grass_dragon.png" alt="" draggable="false" />
-          <img class="hero-sprite small bob3" src="/game/enemies/horn_rabbit.png" alt="" draggable="false" />
+          <img class="hero-sprite small bob1" src="${assetUrl("game/enemies/slime.png")}" alt="" draggable="false" />
+          <img class="hero-sprite dragon bob2" src="${assetUrl("game/enemies/grass_dragon.png")}" alt="" draggable="false" />
+          <img class="hero-sprite small bob3" src="${assetUrl("game/enemies/horn_rabbit.png")}" alt="" draggable="false" />
         </div>
 
         ${

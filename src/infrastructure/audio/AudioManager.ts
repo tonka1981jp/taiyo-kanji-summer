@@ -1,3 +1,4 @@
+import { assetUrl } from "../../assetUrl";
 import { Sfx, type SoundId } from "./Sfx";
 
 // サウンド仕様書 §7, §25: BGMは少数精鋭(タイトル/通常/ボス/クリア/宝箱)。
@@ -125,7 +126,7 @@ export class AudioManager {
   private el(name: string): HTMLAudioElement {
     let el = this.els.get(name);
     if (!el) {
-      el = new Audio(`/audio/bgm/${name}.mp3`);
+      el = new Audio(assetUrl(`audio/bgm/${name}.mp3`));
       el.preload = "auto";
       el.addEventListener("error", () => {
         this.missing.add(name);

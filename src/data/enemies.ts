@@ -1,3 +1,4 @@
+import { assetUrl } from "../assetUrl";
 import type { EnemyDefinition } from "../domain/battle/StageDefinition";
 
 // 仕様書 §50: EnemyDefinition(能力)と EnemySkin(見た目)を分離する。
@@ -25,35 +26,35 @@ export interface EnemySkin {
 }
 
 export const ENEMY_SKINS: Record<string, EnemySkin> = {
-  slime: { enemyId: "slime", image: "/game/enemies/slime.png", emoji: "🟢" },
+  slime: { enemyId: "slime", image: assetUrl("game/enemies/slime.png"), emoji: "🟢" },
   horn_rabbit: {
     enemyId: "horn_rabbit",
-    image: "/game/enemies/horn_rabbit.png",
+    image: assetUrl("game/enemies/horn_rabbit.png"),
     emoji: "🐰",
   },
   mush_goblin: {
     enemyId: "mush_goblin",
-    image: "/game/enemies/mush_goblin.png",
+    image: assetUrl("game/enemies/mush_goblin.png"),
     emoji: "🍄",
   },
   grass_golem: {
     enemyId: "grass_golem",
-    image: "/game/enemies/grass_golem.png",
+    image: assetUrl("game/enemies/grass_golem.png"),
     emoji: "🗿",
   },
   grass_dragon: {
     enemyId: "grass_dragon",
-    image: "/game/enemies/grass_dragon.png",
+    image: assetUrl("game/enemies/grass_dragon.png"),
     emoji: "🐉",
   },
   wind_bird: {
     enemyId: "wind_bird",
-    image: "/game/enemies/wind_bird.png",
+    image: assetUrl("game/enemies/wind_bird.png"),
     emoji: "🐦",
   },
   elder_treant: {
     enemyId: "elder_treant",
-    image: "/game/enemies/elder_treant.png",
+    image: assetUrl("game/enemies/elder_treant.png"),
     emoji: "🌳",
   },
 };
