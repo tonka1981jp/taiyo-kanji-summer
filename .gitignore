@@ -5,3 +5,4 @@ dist/
 .env
 assets/concepts/
 assets/rejected/
+logs/
