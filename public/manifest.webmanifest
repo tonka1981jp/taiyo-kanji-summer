@@ -1,0 +1,10 @@
+{
+  "name": "かんじRPG 音声PoC",
+  "short_name": "かんじRPG",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#10142a",
+  "theme_color": "#10142a",
+  "lang": "ja",
+  "icons": []
+}

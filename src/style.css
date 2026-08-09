@@ -1,0 +1,503 @@
+/* かんじRPG — 本番UI(§13: 少しカッコいい・少しコミカル・学校教材感を消す) */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+:root {
+  --bg: #10142a;
+  --bg2: #1a2140;
+  --panel: #1c2242;
+  --card: #f7f3e8;
+  --card-text: #2a2417;
+  --text: #f2f4ff;
+  --accent: #ffd54d;
+  --correct: #5ef28a;
+  --retry: #ffa94d;
+  --hp: #ff5d73;
+  --hp-bg: #3a4066;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: linear-gradient(180deg, var(--bg) 0%, var(--bg2) 100%);
+  color: var(--text);
+  font-family: "Hiragino Maru Gothic ProN", "BIZ UDGothic", "Yu Gothic",
+    sans-serif;
+  overscroll-behavior: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+#app,
+.screen {
+  height: 100dvh;
+}
+
+.screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: calc(env(safe-area-inset-top) + 14px) 20px
+    calc(env(safe-area-inset-bottom) + 14px);
+}
+
+/* ---------- タイトル ---------- */
+
+.start-screen {
+  justify-content: center;
+  gap: 24px;
+  text-align: center;
+}
+
+.title {
+  font-size: 2.4rem;
+  line-height: 1.3;
+  color: var(--accent);
+  text-shadow: 0 4px 0 rgba(0, 0, 0, 0.35);
+}
+
+.subtitle {
+  font-size: 1.05rem;
+  color: var(--text);
+}
+
+.start-btn {
+  font-size: 1.35rem;
+  font-family: inherit;
+  font-weight: bold;
+  padding: 16px 48px;
+  border: none;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #3a2c00;
+  box-shadow: 0 6px 0 #b8952a;
+  cursor: pointer;
+}
+
+.start-btn:active {
+  transform: translateY(4px);
+  box-shadow: 0 2px 0 #b8952a;
+}
+
+.start-btn.secondary {
+  background: var(--panel);
+  color: var(--text);
+  box-shadow: 0 6px 0 #0d1023;
+  font-size: 1.05rem;
+  padding: 13px 34px;
+}
+
+.stage-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(300px, 100%);
+}
+
+.stage-list-title {
+  font-size: 0.85rem;
+  opacity: 0.75;
+  letter-spacing: 0.1em;
+}
+
+.stage-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: inherit;
+  font-size: 1rem;
+  color: var(--text);
+  background: var(--panel);
+  border: none;
+  border-radius: 12px;
+  padding: 12px 18px;
+  cursor: pointer;
+}
+
+.stage-row:active {
+  transform: scale(0.97);
+}
+
+.support-report {
+  font-size: 0.72rem;
+  opacity: 0.65;
+  max-width: 320px;
+}
+
+.support-report table {
+  margin: 8px auto;
+  border-collapse: collapse;
+}
+
+.support-report td {
+  padding: 2px 10px;
+  text-align: left;
+}
+
+.support-report .ua {
+  word-break: break-all;
+}
+
+.fatal {
+  color: var(--hp);
+  font-weight: bold;
+}
+
+/* ---------- バトル ---------- */
+
+.battle-screen {
+  justify-content: space-between;
+}
+
+.battle-header {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9rem;
+  letter-spacing: 0.06em;
+  opacity: 0.9;
+}
+
+.enemy-area {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  margin-top: 4px;
+}
+
+.enemy-area.shake-hard {
+  animation: area-shake 0.5s;
+}
+
+@keyframes area-shake {
+  0%, 100% { transform: translate(0, 0); }
+  20% { transform: translate(-8px, 3px); }
+  40% { transform: translate(7px, -4px); }
+  60% { transform: translate(-5px, 2px); }
+  80% { transform: translate(4px, -2px); }
+}
+
+.enemy-emoji {
+  font-size: 4.6rem;
+  line-height: 1;
+  filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.5));
+}
+
+.enemy-emoji.boss {
+  font-size: 6rem;
+}
+
+.enemy-emoji.enter {
+  animation: enemy-enter 0.6s ease-out;
+}
+
+@keyframes enemy-enter {
+  0% { transform: translateX(90px) scale(0.4); opacity: 0; }
+  100% { transform: translateX(0) scale(1); opacity: 1; }
+}
+
+.enemy-emoji.hit {
+  animation: shake 0.4s;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-10px) rotate(-6deg); }
+  40% { transform: translateX(9px) rotate(5deg); }
+  60% { transform: translateX(-6px); }
+  80% { transform: translateX(5px); }
+}
+
+.enemy-emoji.defeated {
+  animation: defeat 0.8s ease-in forwards;
+}
+
+@keyframes defeat {
+  0% { transform: scale(1); opacity: 1; }
+  30% { transform: scale(1.15) rotate(8deg); }
+  100% { transform: scale(0.2) rotate(60deg) translateY(50px); opacity: 0; }
+}
+
+.slash {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 120px;
+  height: 120px;
+  margin-left: -60px;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.slash.play {
+  animation: slash-swipe 0.35s ease-out;
+}
+
+.slash::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    transparent 42%,
+    #ffffff 48%,
+    #ffe9a0 52%,
+    transparent 58%
+  );
+}
+
+@keyframes slash-swipe {
+  0% { opacity: 0; transform: translate(-45px, -45px) rotate(0deg) scale(0.6); }
+  30% { opacity: 1; }
+  100% { opacity: 0; transform: translate(45px, 45px) rotate(0deg) scale(1.1); }
+}
+
+.enemy-name {
+  font-size: 0.95rem;
+}
+
+.hp-bar {
+  width: 220px;
+  height: 13px;
+  background: var(--hp-bg);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.hp-fill {
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(90deg, #7cf29a, #4dd672);
+  border-radius: 999px;
+  transition: width 0.35s ease-out;
+}
+
+.hp-fill.low {
+  background: linear-gradient(90deg, #ff8d9d, var(--hp));
+}
+
+.hp-text {
+  font-size: 0.8rem;
+  opacity: 0.9;
+}
+
+.damage-popup {
+  position: absolute;
+  top: 4px;
+  right: -34px;
+  font-size: 1.35rem;
+  font-weight: bold;
+  color: var(--accent);
+  opacity: 0;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.damage-popup.critical {
+  font-size: 1.7rem;
+  color: #ff7b54;
+  text-shadow: 0 0 12px rgba(255, 160, 60, 0.8);
+}
+
+.damage-popup.show {
+  animation: damage-float 0.8s ease-out forwards;
+}
+
+@keyframes damage-float {
+  0% { opacity: 0; transform: translateY(10px) scale(0.7); }
+  25% { opacity: 1; transform: translateY(0) scale(1.15); }
+  100% { opacity: 0; transform: translateY(-28px) scale(1); }
+}
+
+/* ---------- 漢字カード(§13.3 常に主役) ---------- */
+
+.kanji-card {
+  background: var(--card);
+  color: var(--card-text);
+  border-radius: 22px;
+  padding: 26px 30px 18px;
+  width: min(320px, 88vw);
+  min-height: 150px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  box-shadow:
+    0 10px 0 rgba(0, 0, 0, 0.3),
+    inset 0 0 0 3px rgba(0, 0, 0, 0.08);
+}
+
+.kanji {
+  font-size: clamp(3.4rem, 19vw, 5.2rem);
+  font-weight: bold;
+  text-align: center;
+  line-height: 1.1;
+}
+
+.kanji.pop {
+  animation: pop-in 0.3s ease-out;
+}
+
+@keyframes pop-in {
+  0% { transform: scale(0.6); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.hint {
+  min-height: 1.9rem;
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #b0620e;
+  letter-spacing: 0.15em;
+}
+
+/* ---------- マイク・フラッシュ・コンボ ---------- */
+
+.mic-state {
+  font-size: 1.1rem;
+  padding: 9px 24px;
+  border-radius: 999px;
+  background: var(--panel);
+  min-width: 220px;
+  text-align: center;
+}
+
+.mic-state[data-state="listening"] {
+  background: #22345c;
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+.mic-state[data-state="retry"] {
+  background: #4a3420;
+}
+
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(120, 170, 255, 0.45); }
+  50% { box-shadow: 0 0 0 12px rgba(120, 170, 255, 0); }
+}
+
+.flash {
+  font-size: 1.5rem;
+  font-weight: bold;
+  min-height: 2rem;
+  text-align: center;
+  opacity: 0;
+}
+
+.flash.show {
+  animation: flash-pop 0.45s ease-out forwards;
+}
+
+@keyframes flash-pop {
+  0% { opacity: 0; transform: scale(0.5); }
+  60% { opacity: 1; transform: scale(1.15); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.flash.correct { color: var(--correct); }
+.flash.defeated { color: var(--accent); }
+.flash.retry { color: var(--retry); }
+.flash.prompt { color: #8ecbff; }
+.flash.reveal { color: var(--accent); }
+.flash.appear { color: var(--text); }
+.flash.boss-appear { color: var(--hp); font-size: 1.7rem; }
+
+.combo {
+  font-size: 1.15rem;
+  font-weight: bold;
+  color: var(--accent);
+  min-height: 1.6rem;
+}
+
+.combo.pop {
+  animation: flash-pop 0.35s ease-out forwards;
+}
+
+/* ---------- リザルト ---------- */
+
+.result-screen {
+  justify-content: center;
+  gap: 20px;
+}
+
+.result-stage-name {
+  font-size: 1.1rem;
+  opacity: 0.9;
+}
+
+.treasure {
+  font-size: 3.6rem;
+  animation: treasure-bounce 0.9s ease-out;
+}
+
+@keyframes treasure-bounce {
+  0% { transform: translateY(-60px) scale(0.5); opacity: 0; }
+  55% { transform: translateY(0) scale(1.1); opacity: 1; }
+  75% { transform: translateY(-12px); }
+  100% { transform: translateY(0) scale(1); }
+}
+
+.stats {
+  border-collapse: collapse;
+  font-size: 1rem;
+}
+
+.stats td {
+  padding: 7px 14px;
+  border-bottom: 1px solid var(--hp-bg);
+}
+
+.stats td:last-child {
+  text-align: right;
+  font-weight: bold;
+}
+
+.all-clear {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: var(--accent);
+}
+
+/* ---------- デバッグHUD(§36 本番UIと分離) ---------- */
+
+.debug-hud {
+  position: fixed;
+  left: 8px;
+  bottom: calc(env(safe-area-inset-bottom) + 8px);
+  font-family: monospace;
+  font-size: 0.68rem;
+  line-height: 1.5;
+  color: #9fe8a0;
+  background: rgba(0, 0, 0, 0.55);
+  border-radius: 8px;
+  padding: 8px 10px;
+  pointer-events: none;
+  z-index: 20;
+}
+
+/* ---------- エラー ---------- */
+
+.fatal-banner {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: calc(env(safe-area-inset-bottom) + 16px);
+  background: var(--hp);
+  color: #fff;
+  padding: 14px 18px;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  text-align: center;
+  z-index: 30;
+}
