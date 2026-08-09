@@ -101,8 +101,17 @@ export class TitleScene {
       </div>
     `;
 
-    // タイトルBGM(初回はブラウザの自動再生制限で無音。ジェスチャー後の再訪では鳴る)
+    // タイトルBGM。初回はブラウザの自動再生制限で失敗するので、
+    // 画面のどこかを最初にタップした瞬間に解錠して鳴らし直す
     this.audio.playBgm("title");
+    this.root.addEventListener(
+      "pointerdown",
+      () => {
+        this.audio.unlock();
+        this.audio.playBgm("title");
+      },
+      { once: true },
+    );
 
     const select = (stage: StageDefinition): void => {
       this.audio.unlock(); // ユーザージェスチャー内で iOS のオーディオを解錠

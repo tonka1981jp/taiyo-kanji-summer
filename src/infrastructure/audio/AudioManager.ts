@@ -43,18 +43,16 @@ export class AudioManager {
     this.sfx.unlock();
     if (this.unlocked) return;
     this.unlocked = true;
+    // ジェスチャー内で「同期的に」play→pause し、各要素をiOSに許可済みにする。
+    // 非同期(promise内)でpause/ミュート解除すると本再生と競合するため、すべて同期で行う
     for (const name of ["title", "world1", "world2", "boss", "clear", "treasure"]) {
+      if (this.current === name) continue; // 再生中のトラックには触らない
       const el = this.el(name);
       el.muted = true;
-      el.play()
-        .then(() => {
-          el.pause();
-          el.currentTime = 0;
-          el.muted = false;
-        })
-        .catch(() => {
-          el.muted = false;
-        });
+      el.play().catch(() => {});
+      el.pause();
+      el.currentTime = 0;
+      el.muted = false;
     }
   }
 
@@ -63,23 +61,28 @@ export class AudioManager {
   }
 
   playBgm(name: BgmName): void {
-    if (this.current === name) return;
+    const el = this.el(name);
+    // 「同じ曲がすでに実際に鳴っている」ときだけ何もしない
+    // (自動再生ブロックで失敗した過去の呼び出しを"再生中"と誤認しないよう el.paused で判定)
+    if (this.current === name && !el.paused) return;
     this.stopBgm();
     if (this.missing.has(name)) return;
-    const el = this.el(name);
+    el.muted = false;
     el.loop = true;
     el.currentTime = 0;
     el.volume = this.bgmVolume();
-    el.play().catch(() => {
-      // 未配置 or 未解錠: 無音のまま続行
-    });
     this.current = name;
+    el.play().catch(() => {
+      // 未配置 or 自動再生ブロック: 状態を残さない(次の呼び出しで再挑戦できるように)
+      if (this.current === name) this.current = null;
+    });
   }
 
+  /** 全BGM要素を停止(多重再生の防御。どれか1つでも鳴っていれば止まる) */
   stopBgm(): void {
-    if (!this.current) return;
-    const el = this.els.get(this.current);
-    el?.pause();
+    for (const el of this.els.values()) {
+      if (!el.paused) el.pause();
+    }
     this.current = null;
   }
 
