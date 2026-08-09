@@ -30,7 +30,8 @@ export class BattleScene implements BattleRenderer {
   private stageEl!: HTMLElement;
   private encounterEl!: HTMLElement;
   private enemyAreaEl!: HTMLElement;
-  private enemyEmojiEl!: HTMLElement;
+  private enemySpriteEl!: HTMLElement;
+  private critFxEl!: HTMLElement;
   private enemyNameEl!: HTMLElement;
   private hpFillEl!: HTMLElement;
   private hpTextEl!: HTMLElement;
@@ -54,8 +55,6 @@ export class BattleScene implements BattleRenderer {
   mount(stage: StageDefinition): void {
     this.root.innerHTML = `
       <div class="screen battle-screen ${stage.worldId}">
-        <div class="cloud cloud-a">☁️</div>
-        <div class="cloud cloud-b">☁️</div>
 
         <header class="battle-header">
           <span id="stage" class="chip"></span>
@@ -63,8 +62,9 @@ export class BattleScene implements BattleRenderer {
         </header>
 
         <div class="enemy-area" id="enemy-area">
-          <div id="enemy-emoji" class="enemy-emoji"></div>
-          <div id="slash" class="slash"></div>
+          <div id="enemy-sprite" class="enemy-sprite"></div>
+          <img id="slash" class="slash-img" src="/game/fx/slash.png" alt="" />
+          <img id="critfx" class="crit-img" src="/game/fx/critical.png" alt="" />
           <div id="enemy-name" class="enemy-name"></div>
           <div class="hp-bar"><div id="hp-fill" class="hp-fill"></div></div>
           <div id="hp-text" class="hp-text"></div>
@@ -93,7 +93,8 @@ export class BattleScene implements BattleRenderer {
     this.stageEl = this.q("#stage");
     this.encounterEl = this.q("#encounter");
     this.enemyAreaEl = this.q("#enemy-area");
-    this.enemyEmojiEl = this.q("#enemy-emoji");
+    this.enemySpriteEl = this.q("#enemy-sprite");
+    this.critFxEl = this.q("#critfx");
     this.enemyNameEl = this.q("#enemy-name");
     this.hpFillEl = this.q("#hp-fill");
     this.hpTextEl = this.q("#hp-text");
@@ -122,8 +123,12 @@ export class BattleScene implements BattleRenderer {
     this.audio.playBgm(info.isBoss ? "boss" : "world");
     const skin = ENEMY_SKINS[info.enemyId];
     this.encounterEl.textContent = `${info.index + 1} / ${info.total}`;
-    this.enemyEmojiEl.textContent = skin?.emoji ?? "👾";
-    this.enemyEmojiEl.className = "enemy-emoji enter" + (info.isBoss ? " boss" : "");
+    if (skin?.image) {
+      this.enemySpriteEl.innerHTML = `<img src="${skin.image}" alt="${info.name}" draggable="false" />`;
+    } else {
+      this.enemySpriteEl.textContent = skin?.emoji ?? "👾";
+    }
+    this.enemySpriteEl.className = "enemy-sprite enter" + (info.isBoss ? " boss" : "");
     this.enemyNameEl.textContent = info.name;
     this.updateEnemyHp(info.hp, info.maxHp);
     this.flash(
@@ -220,9 +225,9 @@ export class BattleScene implements BattleRenderer {
     void this.slashEl.offsetWidth;
     this.slashEl.classList.add("play");
 
-    this.enemyEmojiEl.classList.remove("hit");
-    void this.enemyEmojiEl.offsetWidth;
-    this.enemyEmojiEl.classList.add("hit");
+    this.enemySpriteEl.classList.remove("hit");
+    void this.enemySpriteEl.offsetWidth;
+    this.enemySpriteEl.classList.add("hit");
 
     this.damageEl.textContent = critical ? `CRITICAL! ${damage}` : `${damage}`;
     this.damageEl.classList.toggle("critical", critical);
@@ -234,6 +239,9 @@ export class BattleScene implements BattleRenderer {
       this.enemyAreaEl.classList.remove("shake-hard");
       void this.enemyAreaEl.offsetWidth;
       this.enemyAreaEl.classList.add("shake-hard");
+      this.critFxEl.classList.remove("play");
+      void this.critFxEl.offsetWidth;
+      this.critFxEl.classList.add("play");
     }
 
     await delay(critical ? 800 : 550);
@@ -258,9 +266,9 @@ export class BattleScene implements BattleRenderer {
   async playEnemyDefeat(name: string): Promise<void> {
     this.audio.play("enemy.defeat");
     this.flash(`${name}を たおした！`, "defeated");
-    this.enemyEmojiEl.classList.add("defeated");
+    this.enemySpriteEl.classList.add("defeated");
     await delay(900);
-    this.enemyEmojiEl.classList.remove("defeated");
+    this.enemySpriteEl.classList.remove("defeated");
   }
 
   showFatalError(message: string): void {

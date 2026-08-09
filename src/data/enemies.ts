@@ -17,13 +17,31 @@ export const ENEMY_MAP: Map<string, EnemyDefinition> = new Map(
 
 export interface EnemySkin {
   enemyId: string;
+  /** 生成アート(public/game/enemies/)。無ければ emoji にフォールバック */
+  image?: string;
   emoji: string;
 }
 
 export const ENEMY_SKINS: Record<string, EnemySkin> = {
-  slime: { enemyId: "slime", emoji: "🟢" },
-  horn_rabbit: { enemyId: "horn_rabbit", emoji: "🐰" },
-  mush_goblin: { enemyId: "mush_goblin", emoji: "🍄" },
-  grass_golem: { enemyId: "grass_golem", emoji: "🗿" },
-  grass_dragon: { enemyId: "grass_dragon", emoji: "🐉" },
+  slime: { enemyId: "slime", image: "/game/enemies/slime.png", emoji: "🟢" },
+  horn_rabbit: {
+    enemyId: "horn_rabbit",
+    image: "/game/enemies/horn_rabbit.png",
+    emoji: "🐰",
+  },
+  mush_goblin: {
+    enemyId: "mush_goblin",
+    image: "/game/enemies/mush_goblin.png",
+    emoji: "🍄",
+  },
+  grass_golem: {
+    enemyId: "grass_golem",
+    image: "/game/enemies/grass_golem.png",
+    emoji: "🗿",
+  },
+  grass_dragon: {
+    enemyId: "grass_dragon",
+    image: "/game/enemies/grass_dragon.png",
+    emoji: "🐉",
+  },
 };
