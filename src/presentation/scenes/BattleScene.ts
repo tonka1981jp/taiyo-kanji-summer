@@ -27,6 +27,7 @@ function delay(ms: number): Promise<void> {
 }
 
 export class BattleScene implements BattleRenderer {
+  private worldBgm: "world1" | "world2" = "world1";
   private stageEl!: HTMLElement;
   private encounterEl!: HTMLElement;
   private enemyAreaEl!: HTMLElement;
@@ -109,6 +110,7 @@ export class BattleScene implements BattleRenderer {
     this.comboEl = this.q("#combo");
     this.debugEl = this.debugMode ? this.q("#debug-hud") : null;
 
+    this.worldBgm = stage.worldId === "world2" ? "world2" : "world1";
     this.stageEl.textContent = stage.name;
     this.setMic("off");
   }
@@ -120,7 +122,7 @@ export class BattleScene implements BattleRenderer {
   // ---------- BattleRenderer ----------
 
   async showEncounter(info: EncounterInfo): Promise<void> {
-    this.audio.playBgm(info.isBoss ? "boss" : "world");
+    this.audio.playBgm(info.isBoss ? "boss" : this.worldBgm);
     const skin = ENEMY_SKINS[info.enemyId];
     this.encounterEl.textContent = `${info.index + 1} / ${info.total}`;
     if (skin?.image) {

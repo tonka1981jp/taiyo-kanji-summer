@@ -4,12 +4,16 @@ import { Sfx, type SoundId } from "./Sfx";
 // Suno で制作した音源を public/audio/bgm/ に置けば自動で鳴る。
 // ファイルが無い間は無音のまま動く(SEのみ)。
 
-export type BgmName = "title" | "world" | "boss";
+export type BgmName = "title" | "world1" | "world2" | "boss";
 export type JingleName = "clear" | "treasure";
 
 const BGM_BASE_VOLUME = 0.55;
-/** §17.2: LISTENING 中は BGM 70〜85% に下げて音声認識を邪魔しない */
-const DUCK_RATIO = 0.75;
+/**
+ * LISTENING 中の BGM 音量比。
+ * 仕様書§17.2の目安(70〜85%)より意図的に深くしている:
+ * 「BGMがスッと小さくなる = いま話す番」という音の合図として使うため。
+ */
+const DUCK_RATIO = 0.45;
 
 export class AudioManager {
   readonly sfx = new Sfx();
@@ -25,7 +29,7 @@ export class AudioManager {
     this.sfx.unlock();
     if (this.unlocked) return;
     this.unlocked = true;
-    for (const name of ["title", "world", "boss", "clear", "treasure"]) {
+    for (const name of ["title", "world1", "world2", "boss", "clear", "treasure"]) {
       const el = this.el(name);
       el.muted = true;
       el.play()
@@ -81,13 +85,37 @@ export class AudioManager {
     });
   }
 
-  /** LISTENING 中の BGM ダッキング(§17) */
+  /**
+   * LISTENING 中の BGM ダッキング(§17)。
+   * 急に切り替えず短いフェードにして「スッと引く」合図として聞かせる。
+   */
   setDucked(ducked: boolean): void {
+    if (this.ducked === ducked) return;
     this.ducked = ducked;
     if (this.current) {
       const el = this.els.get(this.current);
-      if (el) el.volume = this.bgmVolume();
+      if (el) this.fadeTo(el, this.bgmVolume());
     }
+  }
+
+  private fadeInterval: number | undefined;
+
+  private fadeTo(el: HTMLAudioElement, target: number, ms = 220): void {
+    if (this.fadeInterval !== undefined) {
+      clearInterval(this.fadeInterval);
+      this.fadeInterval = undefined;
+    }
+    const start = el.volume;
+    const steps = 8;
+    let i = 0;
+    this.fadeInterval = window.setInterval(() => {
+      i += 1;
+      el.volume = Math.max(0, Math.min(1, start + (target - start) * (i / steps)));
+      if (i >= steps) {
+        clearInterval(this.fadeInterval);
+        this.fadeInterval = undefined;
+      }
+    }, ms / steps);
   }
 
   private bgmVolume(): number {
