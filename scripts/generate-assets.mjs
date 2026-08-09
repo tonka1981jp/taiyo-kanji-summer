@@ -17,6 +17,7 @@
 
 import { mkdir, readFile, writeFile, readdir } from "node:fs/promises";
 import { existsSync } from "node:fs";
+import { spawnSync } from "node:child_process";
 import path from "node:path";
 
 const ROOT = path.resolve(new URL("..", import.meta.url).pathname);
@@ -30,6 +31,12 @@ const STYLE_LOCK =
   "NOT extremely low-resolution 8-bit retro. Bright colors, readable silhouette, " +
   "not scary, cute but slightly cool, consistent game-asset look, polished quality.";
 
+// gpt-image-2 は透過出力非対応のため、マゼンタ単色で生成して
+// scripts/strip_magenta.py でクロマキー抜きする(background: "transparent" のカテゴリ)
+const CHROMA_BG =
+  "The subject is isolated on a completely flat, uniform, solid bright magenta background (#FF00FF). " +
+  "No checkerboard pattern, no gradient, no background scenery, no shadow cast on the background.";
+
 // §21.1: アセット種別ごとにテンプレートを分ける(§11)
 const CATEGORIES = {
   enemies: {
@@ -37,7 +44,7 @@ const CATEGORIES = {
     background: "transparent",
     template: (item) =>
       `${STYLE_LOCK} Draw a single enemy character: ${item.desc}. ` +
-      "Full body, centered composition, transparent background, clean outline, " +
+      "Full body, centered composition, clean outline, " + CHROMA_BG + " " +
       "front-facing or slightly angled, feet visible with a little margin below.",
     items: [
       { theme: "grassland", name: "slime", desc: "a cheerful round grassland slime, green, bouncy, friendly" },
@@ -53,7 +60,7 @@ const CATEGORIES = {
     template: (item) =>
       `${STYLE_LOCK} Draw a boss enemy: ${item.desc}. ` +
       "Exciting and memorable, a little intimidating but not scary, strong silhouette, " +
-      "larger and more detailed than a normal enemy. Full body, centered, transparent background.",
+      "larger and more detailed than a normal enemy. Full body, centered. " + CHROMA_BG,
     items: [
       { theme: "grassland", name: "grass_dragon", desc: "a young green dragon, guardian of the meadow, proud but kid-friendly" },
       { theme: "forest", name: "elder_treant", desc: "a big walking tree guardian with glowing leaves, majestic but gentle" },
@@ -81,7 +88,7 @@ const CATEGORIES = {
     template: (item) =>
       `${STYLE_LOCK} Create a decorative UI asset: ${item.desc}. ` +
       "Clean and readable, slightly magical, bright but not noisy, easy to place text on top, " +
-      "no letters or numbers baked into the image. Transparent background.",
+      "no letters or numbers baked into the image. " + CHROMA_BG,
     items: [
       { theme: "panel", name: "kanji_card", desc: "a parchment-style question card frame with a subtle fantasy border" },
       { theme: "panel", name: "hp_frame", desc: "a sturdy horizontal HP bar frame" },
@@ -96,7 +103,7 @@ const CATEGORIES = {
     template: (item) =>
       `${STYLE_LOCK} Create a single isolated visual effect asset: ${item.desc}. ` +
       "Energetic, bright, readable on a mobile screen, one effect only, " +
-      "clean isolated shape on a transparent background.",
+      "clean isolated shape. " + CHROMA_BG,
     items: [
       { theme: "slash", name: "light", desc: "a diagonal white-gold sword slash arc" },
       { theme: "critical", name: "burst", desc: "an orange-gold critical hit starburst" },
@@ -110,7 +117,7 @@ const CATEGORIES = {
       `${STYLE_LOCK} Draw the player hero: ${item.desc}. ` +
       "Gender-neutral young adventurer design, blue-green color scheme, " +
       "a small magical weapon that suggests 'the power of words', full body, " +
-      "centered, transparent background.",
+      "centered. " + CHROMA_BG,
     items: [
       { theme: "hero", name: "word_knight", desc: "a young hero holding a small glowing sword shaped like a brush stroke" },
     ],
@@ -157,21 +164,10 @@ async function generate(category, item, model, apiKey) {
     size: category.size,
     n: 1,
   };
-  if (category.background === "transparent") {
-    body.background = "transparent";
-  }
+  // 透過は background パラメータではなくマゼンタ背景+クロマキー後処理で実現する
+  // (gpt-image-2 は background: "transparent" 非対応)
 
-  let res = await requestImage(body, apiKey);
-  if (!res.ok && body.background) {
-    // モデルが background パラメータ非対応の場合はプロンプト指定のみで再試行
-    const text = await res.text();
-    if (text.includes("background")) {
-      delete body.background;
-      res = await requestImage(body, apiKey);
-    } else {
-      throw new Error(`API error ${res.status}: ${text}`);
-    }
-  }
+  const res = await requestImage(body, apiKey);
   if (!res.ok) {
     throw new Error(`API error ${res.status}: ${await res.text()}`);
   }
@@ -201,15 +197,10 @@ async function main() {
   const count = args.includes("--count")
     ? Number(args[args.indexOf("--count") + 1])
     : 1;
-  // 透過が必要なアセットは background パラメータ対応の gpt-image-1、
-  // 背景画(不透過)は gpt-image-2 を既定にする。IMAGE_MODEL / --model で上書き可。
+  // 全カテゴリ gpt-image-2 統一(透過はマゼンタ+クロマキーで実現)
   const model =
     process.env.IMAGE_MODEL ??
-    (args.includes("--model")
-      ? args[args.indexOf("--model") + 1]
-      : CATEGORIES[categoryName]?.background === "transparent"
-        ? "gpt-image-1"
-        : "gpt-image-2");
+    (args.includes("--model") ? args[args.indexOf("--model") + 1] : "gpt-image-2");
 
   const category = CATEGORIES[categoryName];
   if (!category) {
@@ -255,7 +246,19 @@ async function main() {
       process.stdout.write(`生成中: ${name} ... `);
       try {
         const buf = await generate(category, item, model, apiKey);
-        await writeFile(path.join(OUT_DIR, name), buf);
+        const outPath = path.join(OUT_DIR, name);
+        await writeFile(outPath, buf);
+        if (category.background === "transparent") {
+          // マゼンタ背景をクロマキー抜きして実アルファ化
+          const strip = spawnSync(
+            "python3",
+            [path.join(ROOT, "scripts", "strip_magenta.py"), outPath],
+            { stdio: "inherit" },
+          );
+          if (strip.status !== 0) {
+            console.log("  (クロマキー抜き失敗: 元画像のまま保存)");
+          }
+        }
         console.log("OK");
       } catch (err) {
         console.log(`失敗: ${err.message}`);
