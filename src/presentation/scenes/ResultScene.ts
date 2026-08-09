@@ -1,10 +1,12 @@
 import type { StageSummary } from "../../application/BattleRenderer";
 import type { StageDefinition } from "../../domain/battle/StageDefinition";
 import type { AudioManager } from "../../infrastructure/audio/AudioManager";
+import type { RareCardDef } from "../../data/cards";
 
 export interface ResultSceneProps {
   summary: StageSummary;
   nextStage: StageDefinition | null;
+  droppedCard: { card: RareCardDef; isNew: boolean; count: number } | null;
   onNext: (stage: StageDefinition) => void;
   onTitle: () => void;
 }
@@ -16,7 +18,7 @@ export class ResultScene {
   ) {}
 
   mount(props: ResultSceneProps): void {
-    const { summary, nextStage } = props;
+    const { summary, nextStage, droppedCard } = props;
 
     // クリアジングル(Suno音源が無ければコード生成SEで代用)
     this.audio.playJingle("clear", "stage.clear");
@@ -29,6 +31,21 @@ export class ResultScene {
         <h1 class="title">STAGE CLEAR!</h1>
         <p class="result-stage-name">${summary.stageName}</p>
         <div class="treasure">🎁</div>
+        ${
+          droppedCard
+            ? `<div class="drop-card rcard owned rarity-${droppedCard.card.rarity.toLowerCase()}" style="--card-bg: url('${droppedCard.card.bgUrl}')">
+                 <span class="rcard-rarity">${droppedCard.card.rarity}</span>
+                 <img class="rcard-img" src="${droppedCard.card.image}" alt="" draggable="false" />
+                 <span class="rcard-name">${droppedCard.card.name}</span>
+                 <i class="kcard-shine"></i>
+               </div>
+               <p class="drop-label">${
+                 droppedCard.isNew
+                   ? "✨ あたらしいカードを ゲット！"
+                   : `カードを ゲット！(×${droppedCard.count})`
+               }</p>`
+            : ""
+        }
         <table class="stats">
           <tr><td>よんだ かいすう</td><td>${summary.utterances}</td></tr>
           <tr><td>せいかい</td><td>${summary.correct}</td></tr>

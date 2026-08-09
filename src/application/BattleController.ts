@@ -28,6 +28,8 @@ export interface BattleControllerDeps {
   renderer: BattleRenderer;
   progress: PlayerProgress;
   onStageCleared: (summary: StageSummary) => void;
+  /** CORRECT確定時(コレクションの漢字解放などに使う) */
+  onCorrect?: (question: ReadingQuestion) => void;
 }
 
 export class BattleController {
@@ -146,6 +148,7 @@ export class BattleController {
       case "CORRECT":
         this.stats.correct += 1;
         recordSttHit(progress, question.id, "accepted", evaluation.matched);
+        this.deps.onCorrect?.(question);
         break;
       case "STT_AMBIGUOUS":
         this.stats.ambiguous += 1;

@@ -119,6 +119,28 @@ const CATEGORIES = {
       { theme: "sparkle", name: "reward", desc: "a cluster of celebratory golden sparkles" },
     ],
   },
+  cardbg: {
+    size: "1024x1536",
+    background: "opaque",
+    template: (item) =>
+      `${STYLE_LOCK} Create a decorative trading-card background: ${item.desc}. ` +
+      "Portrait card composition, soft rich colors, ornamental but calm. " +
+      "The CENTER must stay simple, slightly darker and uncluttered so a large white kanji " +
+      "character can be overlaid and read clearly. Subtle vignette toward the edges. " +
+      "No letters, no characters, no border frame (the frame is drawn in code).",
+    items: [
+      { theme: "deco", name: "meadow", desc: "gentle green meadow with soft light and tiny flowers" },
+      { theme: "deco", name: "forest", desc: "deep forest with soft light beams and fireflies" },
+      { theme: "deco", name: "sky", desc: "bright blue sky with clouds and distant floating islands" },
+      { theme: "deco", name: "crystal", desc: "glowing blue-purple crystal cavern" },
+      { theme: "deco", name: "flame", desc: "warm orange ember glow with rising sparks" },
+      { theme: "deco", name: "ocean", desc: "calm underwater scene with light rays and bubbles" },
+      { theme: "deco", name: "starlight", desc: "starry night sky with a soft nebula" },
+      { theme: "deco", name: "sunset", desc: "golden sunset over rolling hills" },
+      { theme: "deco", name: "snow", desc: "quiet snowy field with gentle falling snowflakes" },
+      { theme: "deco", name: "gold", desc: "royal gold ornamental pattern with soft shine" },
+    ],
+  },
   player: {
     size: "1024x1024",
     background: "transparent",
@@ -241,6 +263,7 @@ async function main() {
     enemies: "enemy",
     bosses: "boss",
     backgrounds: "bg",
+    cardbg: "card",
     ui: "ui",
     effects: "fx",
     player: "player",

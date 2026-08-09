@@ -9,7 +9,9 @@ export interface TitleSceneProps {
   report: SpeechSupportReport;
   progress: PlayerProgress;
   stages: StageDefinition[];
+  collectionCount: number;
   onSelectStage: (stage: StageDefinition) => void;
+  onOpenCollection: () => void;
 }
 
 export class TitleScene {
@@ -72,6 +74,10 @@ export class TitleScene {
             : `<p class="fatal">このブラウザは音声認識に対応していません</p>`
         }
 
+        <button id="collection-btn" class="collection-btn">
+          📖 コレクション <span class="collection-badge">${props.collectionCount} / 102</span>
+        </button>
+
         <div class="stage-list">
           ${stageRows}
         </div>
@@ -102,6 +108,11 @@ export class TitleScene {
     this.root
       .querySelector("#start-btn")
       ?.addEventListener("click", () => select(nextStage));
+
+    this.root.querySelector("#collection-btn")?.addEventListener("click", () => {
+      this.audio.play("ui.tap");
+      props.onOpenCollection();
+    });
 
     this.root.querySelectorAll<HTMLButtonElement>(".stage-card").forEach((btn) => {
       btn.addEventListener("click", () => {
