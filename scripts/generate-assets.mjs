@@ -80,6 +80,15 @@ const CATEGORIES = {
       { theme: "cave", name: "battle", desc: "a crystal cave with glowing blue crystals, magical but not dark" },
       { theme: "volcano", name: "battle", desc: "a warm volcano area with orange glow, adventurous not menacing" },
       { theme: "ruins", name: "battle", desc: "floating sky ruins with starry twilight, wondrous" },
+      {
+        theme: "title",
+        name: "vista",
+        desc:
+          "an epic bright adventure vista seen from a grassy hilltop: rolling green fields, " +
+          "a winding path, distant floating islands and a small castle, big blue sky with " +
+          "clouds and warm sun rays, the feeling that a grand journey is about to begin. " +
+          "Keep the middle of the image relatively calm so a game logo can be placed over it",
+      },
     ],
   },
   ui: {

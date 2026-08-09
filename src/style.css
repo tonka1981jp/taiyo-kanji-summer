@@ -163,6 +163,196 @@ body {
   font-weight: bold;
 }
 
+/* ---------- タイトル(生成アートのビスタ+ロゴ演出) ---------- */
+
+.title-screen {
+  justify-content: center;
+  gap: 18px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  background:
+    url("/game/bg/title.jpg") center / cover no-repeat,
+    linear-gradient(180deg, #8fd3f4 0%, #79c25f 100%);
+}
+
+.twinkle {
+  position: absolute;
+  font-size: 1.3rem;
+  pointer-events: none;
+  animation: twinkle 2.4s ease-in-out infinite;
+}
+
+.twinkle.t1 { top: 14%; left: 16%; }
+.twinkle.t2 { top: 9%; right: 14%; animation-delay: 0.8s; }
+.twinkle.t3 { top: 26%; right: 24%; font-size: 1rem; animation-delay: 1.5s; }
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.15; transform: scale(0.7) rotate(-8deg); }
+  50% { opacity: 1; transform: scale(1.15) rotate(8deg); }
+}
+
+.title-logo {
+  animation: logo-drop 0.7s cubic-bezier(0.2, 1.6, 0.4, 1);
+}
+
+@keyframes logo-drop {
+  0% { transform: translateY(-70px) scale(0.6); opacity: 0; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+.logo-main {
+  font-family: var(--jp-pixel-font);
+  font-size: 3.2rem;
+  line-height: 1.1;
+  color: var(--accent);
+  text-shadow:
+    3px 3px 0 #6b4b00,
+    -3px 3px 0 #6b4b00,
+    3px -3px 0 #6b4b00,
+    -3px -3px 0 #6b4b00,
+    0 8px 14px rgba(0, 0, 0, 0.35);
+  animation: logo-float 3s ease-in-out infinite;
+}
+
+.logo-rpg {
+  font-family: var(--pixel-font);
+  font-size: 2.2rem;
+  color: #fff;
+  text-shadow:
+    3px 3px 0 #1d3557,
+    -3px 3px 0 #1d3557,
+    3px -3px 0 #1d3557,
+    -3px -3px 0 #1d3557;
+}
+
+@keyframes logo-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+.logo-sub {
+  display: inline-block;
+  margin-top: 10px;
+  font-size: 1rem;
+  font-weight: bold;
+  color: #fff;
+  background: rgba(16, 20, 42, 0.72);
+  padding: 6px 18px;
+  border-radius: 999px;
+}
+
+.title-heroes {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 6px;
+}
+
+.hero-sprite {
+  filter: drop-shadow(0 8px 8px rgba(0, 0, 0, 0.3));
+  pointer-events: none;
+}
+
+.hero-sprite.small {
+  width: 74px;
+  height: 74px;
+  object-fit: contain;
+}
+
+.hero-sprite.dragon {
+  width: 150px;
+  height: 150px;
+  object-fit: contain;
+}
+
+.bob1 { animation: bob 2.2s ease-in-out infinite; }
+.bob2 { animation: bob 2.8s ease-in-out infinite 0.4s; }
+.bob3 { animation: bob 2.4s ease-in-out infinite 0.9s; }
+
+@keyframes bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-9px); }
+}
+
+.title-start {
+  font-size: 1.45rem;
+  padding: 18px 52px;
+  animation: start-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes start-pulse {
+  0%, 100% { box-shadow: 0 6px 0 #b8952a, 0 0 0 0 rgba(255, 213, 77, 0.55); }
+  50% { box-shadow: 0 6px 0 #b8952a, 0 0 0 14px rgba(255, 213, 77, 0); }
+}
+
+.title-screen .stage-list-title {
+  color: #fff;
+  background: rgba(16, 20, 42, 0.72);
+  border-radius: 999px;
+  padding: 5px 14px;
+  display: inline-block;
+}
+
+.stage-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: bold;
+  color: var(--card-text);
+  background: rgba(253, 248, 234, 0.92);
+  border: 3px solid var(--card-border);
+  border-radius: 14px;
+  padding: 8px 14px;
+  cursor: pointer;
+  box-shadow: 0 4px 0 rgba(29, 53, 87, 0.3);
+}
+
+.stage-card:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 rgba(29, 53, 87, 0.3);
+}
+
+.stage-card.next {
+  border-color: #b8952a;
+  background: #fff6d8;
+}
+
+.stage-card-icon {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+}
+
+.stage-card-icon img {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+}
+
+.stage-card-name {
+  flex: 1;
+  text-align: left;
+}
+
+.stage-card-mark {
+  font-size: 1.1rem;
+  min-width: 1.4rem;
+}
+
+.title-support {
+  color: #fff;
+  background: rgba(16, 20, 42, 0.6);
+  border-radius: 10px;
+  padding: 6px 12px;
+  opacity: 0.9;
+}
+
 /* ---------- バトル: WORLD1 はじまりの草原(昼・ピクセル風バンド背景) ---------- */
 
 .battle-screen {

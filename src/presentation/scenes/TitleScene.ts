@@ -2,6 +2,7 @@ import type { StageDefinition } from "../../domain/battle/StageDefinition";
 import type { PlayerProgress } from "../../domain/progression/PlayerProgress";
 import type { AudioManager } from "../../infrastructure/audio/AudioManager";
 import type { SpeechSupportReport } from "../../infrastructure/speech/SpeechSupportDetector";
+import { ENEMY_SKINS } from "../../data/enemies";
 import { nextUnclearedStage } from "../../data/stages";
 
 export interface TitleSceneProps {
@@ -24,27 +25,51 @@ export class TitleScene {
     const stageRows = stages
       .map((s) => {
         const cleared = progress.clearedStageIds.includes(s.id);
+        const isNext = s.id === nextStage.id && !cleared;
+        // ステージの目玉 = 最後のエンカウント(ボス)をアイコンにする
+        const bossId = s.encounters[s.encounters.length - 1]?.enemyId;
+        const skin = bossId ? ENEMY_SKINS[bossId] : undefined;
+        const icon = skin?.image
+          ? `<img src="${skin.image}" alt="" draggable="false" />`
+          : (skin?.emoji ?? "👾");
         return `
-          <button class="stage-row" data-stage="${s.id}">
-            <span>${s.name}</span>
-            <span class="stage-mark">${cleared ? "⭐" : ""}</span>
+          <button class="stage-card${isNext ? " next" : ""}" data-stage="${s.id}">
+            <span class="stage-card-icon">${icon}</span>
+            <span class="stage-card-name">${s.name}</span>
+            <span class="stage-card-mark">${cleared ? "⭐" : isNext ? "▶" : ""}</span>
           </button>`;
       })
       .join("");
 
     this.root.innerHTML = `
-      <div class="screen start-screen">
-        <h1 class="title">かんじRPG<br /><span class="subtitle">こえで よむ ぼうけん</span></h1>
+      <div class="screen title-screen">
+        <span class="twinkle t1">✨</span>
+        <span class="twinkle t2">✨</span>
+        <span class="twinkle t3">⭐</span>
+
+        <div class="title-logo">
+          <h1 class="logo-main">かんじ<span class="logo-rpg">RPG</span></h1>
+          <p class="logo-sub">こえで よむ ぼうけん</p>
+        </div>
+
+        <div class="title-heroes">
+          <img class="hero-sprite small bob1" src="/game/enemies/slime.png" alt="" draggable="false" />
+          <img class="hero-sprite dragon bob2" src="/game/enemies/grass_dragon.png" alt="" draggable="false" />
+          <img class="hero-sprite small bob3" src="/game/enemies/horn_rabbit.png" alt="" draggable="false" />
+        </div>
+
         ${
           report.supported
-            ? `<button id="start-btn" class="start-btn">ぼうけんに でる</button>`
+            ? `<button id="start-btn" class="start-btn title-start">▶ ぼうけんに でる</button>`
             : `<p class="fatal">このブラウザは音声認識に対応していません</p>`
         }
+
         <div class="stage-list">
-          <p class="stage-list-title">WORLD 1 はじまりの草原</p>
+          <p class="stage-list-title">🗺 WORLD 1 はじまりの草原</p>
           ${stageRows}
         </div>
-        <details class="support-report">
+
+        <details class="support-report title-support">
           <summary>環境チェック</summary>
           <table>
             <tr><td>SpeechRecognition</td><td>${report.hasStandard ? "あり" : "なし"}</td></tr>
@@ -71,7 +96,7 @@ export class TitleScene {
       .querySelector("#start-btn")
       ?.addEventListener("click", () => select(nextStage));
 
-    this.root.querySelectorAll<HTMLButtonElement>(".stage-row").forEach((btn) => {
+    this.root.querySelectorAll<HTMLButtonElement>(".stage-card").forEach((btn) => {
       btn.addEventListener("click", () => {
         const stage = stages.find((s) => s.id === btn.dataset.stage);
         if (stage) select(stage);
