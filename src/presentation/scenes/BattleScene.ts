@@ -30,9 +30,12 @@ export class BattleScene implements BattleRenderer {
   private worldBgm: "world1" | "world2" = "world1";
   private stageEl!: HTMLElement;
   private encounterEl!: HTMLElement;
-  private enemyAreaEl!: HTMLElement;
   private enemySpriteEl!: HTMLElement;
   private critFxEl!: HTMLElement;
+  private burstEl!: HTMLElement;
+  private particlesEl!: HTMLElement;
+  private impactEl!: HTMLElement;
+  private screenEl!: HTMLElement;
   private enemyNameEl!: HTMLElement;
   private hpFillEl!: HTMLElement;
   private hpTextEl!: HTMLElement;
@@ -66,6 +69,8 @@ export class BattleScene implements BattleRenderer {
           <div id="enemy-sprite" class="enemy-sprite"></div>
           <img id="slash" class="slash-img" src="/game/fx/slash.png" alt="" />
           <img id="critfx" class="crit-img" src="/game/fx/critical.png" alt="" />
+          <div id="burst" class="burst-ring"></div>
+          <div id="particles" class="particles"></div>
           <div id="enemy-name" class="enemy-name"></div>
           <div class="hp-bar"><div id="hp-fill" class="hp-fill"></div></div>
           <div id="hp-text" class="hp-text"></div>
@@ -87,15 +92,19 @@ export class BattleScene implements BattleRenderer {
 
         <div id="combo" class="combo"></div>
 
+        <div id="impact" class="impact-flash"></div>
         ${this.debugMode ? `<div id="debug-hud" class="debug-hud"></div>` : ""}
       </div>
     `;
 
     this.stageEl = this.q("#stage");
     this.encounterEl = this.q("#encounter");
-    this.enemyAreaEl = this.q("#enemy-area");
     this.enemySpriteEl = this.q("#enemy-sprite");
     this.critFxEl = this.q("#critfx");
+    this.burstEl = this.q("#burst");
+    this.particlesEl = this.q("#particles");
+    this.impactEl = this.q("#impact");
+    this.screenEl = this.q(".battle-screen");
     this.enemyNameEl = this.q("#enemy-name");
     this.hpFillEl = this.q("#hp-fill");
     this.hpTextEl = this.q("#hp-text");
@@ -223,6 +232,13 @@ export class BattleScene implements BattleRenderer {
   async playAttack(damage: number, critical: boolean): Promise<void> {
     this.audio.play(critical ? "battle.critical" : "battle.slash");
 
+    // 画面フラッシュ+画面シェイク(攻撃した感)
+    this.impact(critical ? "crit" : "hit");
+    this.spawnParticles(
+      critical ? 16 : 9,
+      critical ? ["#ffd54d", "#ff7b54", "#ffffff"] : ["#ffffff", "#ffe9a0", "#8ecbff"],
+    );
+
     this.slashEl.classList.remove("play");
     void this.slashEl.offsetWidth;
     this.slashEl.classList.add("play");
@@ -238,9 +254,6 @@ export class BattleScene implements BattleRenderer {
     this.damageEl.classList.add("show");
 
     if (critical) {
-      this.enemyAreaEl.classList.remove("shake-hard");
-      void this.enemyAreaEl.offsetWidth;
-      this.enemyAreaEl.classList.add("shake-hard");
       this.critFxEl.classList.remove("play");
       void this.critFxEl.offsetWidth;
       this.critFxEl.classList.add("play");
@@ -267,10 +280,46 @@ export class BattleScene implements BattleRenderer {
 
   async playEnemyDefeat(name: string): Promise<void> {
     this.audio.play("enemy.defeat");
+    this.impact("defeat");
+    this.burstEl.classList.remove("play");
+    void this.burstEl.offsetWidth;
+    this.burstEl.classList.add("play");
+    this.spawnParticles(22, ["#ffd54d", "#ffffff", "#ff9d3c", "#8ecbff"]);
     this.flash(`${name}を たおした！`, "defeated");
     this.enemySpriteEl.classList.add("defeated");
-    await delay(900);
+    await delay(950);
     this.enemySpriteEl.classList.remove("defeated");
+  }
+
+  // ---------- 演出ヘルパー ----------
+
+  /** 画面全体フラッシュ+シェイク */
+  private impact(kind: "hit" | "crit" | "defeat"): void {
+    this.impactEl.className = "impact-flash";
+    void this.impactEl.offsetWidth;
+    this.impactEl.classList.add(kind);
+
+    this.screenEl.classList.remove("shake-screen", "shake-screen-hard");
+    void this.screenEl.offsetWidth;
+    this.screenEl.classList.add(kind === "hit" ? "shake-screen" : "shake-screen-hard");
+  }
+
+  /** 敵位置から飛び散るパーティクル */
+  private spawnParticles(count: number, colors: string[]): void {
+    for (let i = 0; i < count; i++) {
+      const p = document.createElement("i");
+      p.className = "particle";
+      const angle = Math.random() * Math.PI * 2;
+      const dist = 50 + Math.random() * 75;
+      p.style.setProperty("--dx", `${Math.cos(angle) * dist}px`);
+      p.style.setProperty("--dy", `${Math.sin(angle) * dist - 25}px`);
+      p.style.background = colors[i % colors.length];
+      const size = 5 + Math.random() * 7;
+      p.style.width = `${size}px`;
+      p.style.height = `${size}px`;
+      this.particlesEl.appendChild(p);
+      p.addEventListener("animationend", () => p.remove());
+    }
   }
 
   showFatalError(message: string): void {

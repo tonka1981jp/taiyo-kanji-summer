@@ -61,10 +61,19 @@ body {
 
 .start-screen,
 .result-screen {
-  justify-content: center;
-  gap: 24px;
+  justify-content: flex-start;
+  gap: 20px;
   text-align: center;
   background: linear-gradient(180deg, var(--navy) 0%, var(--navy2) 100%);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-top: calc(env(safe-area-inset-top) + 34px);
+}
+
+/* flexの子が潰れて中央寄せ+overflowで上が切れるのを防ぐ */
+.title-screen > *,
+.result-screen > * {
+  flex-shrink: 0;
 }
 
 .title {
@@ -166,11 +175,13 @@ body {
 /* ---------- タイトル(生成アートのビスタ+ロゴ演出) ---------- */
 
 .title-screen {
-  justify-content: center;
+  justify-content: flex-start;
   gap: 18px;
   text-align: center;
   position: relative;
-  overflow: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-top: calc(env(safe-area-inset-top) + 30px);
   background:
     url("/game/bg/title.jpg") center / cover no-repeat,
     linear-gradient(180deg, #8fd3f4 0%, #79c25f 100%);
@@ -560,31 +571,34 @@ body {
   top: 0;
   right: -44px;
   font-family: var(--pixel-font);
-  font-size: 1.3rem;
+  font-size: 1.7rem;
   color: #fff;
   text-shadow:
-    2px 2px 0 #1d3557,
-    -2px 2px 0 #1d3557,
-    2px -2px 0 #1d3557,
-    -2px -2px 0 #1d3557;
+    3px 3px 0 #1d3557,
+    -3px 3px 0 #1d3557,
+    3px -3px 0 #1d3557,
+    -3px -3px 0 #1d3557;
   opacity: 0;
   pointer-events: none;
   white-space: nowrap;
+  z-index: 6;
 }
 
 .damage-popup.critical {
-  font-size: 1.6rem;
+  font-size: 2.2rem;
   color: #ffb340;
 }
 
 .damage-popup.show {
-  animation: damage-float 0.8s ease-out forwards;
+  animation: damage-slam 0.85s cubic-bezier(0.2, 1.4, 0.4, 1) forwards;
 }
 
-@keyframes damage-float {
-  0% { opacity: 0; transform: translateY(10px) scale(0.7); }
-  25% { opacity: 1; transform: translateY(0) scale(1.15); }
-  100% { opacity: 0; transform: translateY(-30px) scale(1); }
+@keyframes damage-slam {
+  0% { opacity: 0; transform: scale(3.2) rotate(-8deg); }
+  25% { opacity: 1; transform: scale(1) rotate(3deg); }
+  40% { transform: scale(1.15) rotate(0deg); }
+  70% { opacity: 1; transform: translateY(-10px) scale(1); }
+  100% { opacity: 0; transform: translateY(-34px) scale(0.95); }
 }
 
 /* ---------- 漢字カード(§9: 攻撃コマンド表示。常に主役) ---------- */
@@ -802,6 +816,109 @@ body {
   font-size: 1.2rem;
   font-weight: bold;
   color: var(--accent);
+}
+
+/* ---------- 攻撃インパクト演出(ドパガキ仕様) ---------- */
+
+.impact-flash {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  z-index: 5;
+}
+
+.impact-flash.hit {
+  background: #fff;
+  animation: impact-hit 0.16s ease-out;
+}
+
+.impact-flash.crit {
+  background: radial-gradient(circle at 50% 30%, rgba(255, 200, 80, 0.95), rgba(255, 120, 40, 0.4) 55%, transparent 80%);
+  animation: impact-crit 0.3s ease-out;
+}
+
+.impact-flash.defeat {
+  background: radial-gradient(circle at 50% 30%, #ffffff, rgba(255, 220, 120, 0.5) 55%, transparent 85%);
+  animation: impact-crit 0.4s ease-out;
+}
+
+@keyframes impact-hit {
+  0% { opacity: 0.75; }
+  100% { opacity: 0; }
+}
+
+@keyframes impact-crit {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.battle-screen.shake-screen {
+  animation: screen-shake 0.3s;
+}
+
+.battle-screen.shake-screen-hard {
+  animation: screen-shake-hard 0.45s;
+}
+
+@keyframes screen-shake {
+  0%, 100% { transform: translate(0, 0); }
+  25% { transform: translate(-6px, 3px); }
+  50% { transform: translate(5px, -4px); }
+  75% { transform: translate(-3px, 2px); }
+}
+
+@keyframes screen-shake-hard {
+  0%, 100% { transform: translate(0, 0); }
+  15% { transform: translate(-12px, 6px) rotate(-0.6deg); }
+  30% { transform: translate(11px, -7px) rotate(0.5deg); }
+  45% { transform: translate(-8px, 4px); }
+  60% { transform: translate(7px, -4px); }
+  80% { transform: translate(-4px, 2px); }
+}
+
+.particles {
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  z-index: 4;
+}
+
+.particle {
+  position: absolute;
+  border-radius: 2px;
+  animation: particle-fly 0.55s ease-out forwards;
+}
+
+@keyframes particle-fly {
+  0% { opacity: 1; transform: translate(0, 0) rotate(0deg) scale(1); }
+  100% { opacity: 0; transform: translate(var(--dx), var(--dy)) rotate(200deg) scale(0.3); }
+}
+
+.burst-ring {
+  position: absolute;
+  top: 30%;
+  left: 50%;
+  width: 90px;
+  height: 90px;
+  margin-left: -45px;
+  border: 6px solid rgba(255, 220, 120, 0.9);
+  border-radius: 50%;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 4;
+}
+
+.burst-ring.play {
+  animation: burst-expand 0.5s ease-out;
+}
+
+@keyframes burst-expand {
+  0% { opacity: 1; transform: scale(0.2); border-width: 10px; }
+  100% { opacity: 0; transform: scale(2.6); border-width: 1px; }
 }
 
 /* ---------- コレクション ---------- */
@@ -1023,6 +1140,30 @@ body {
 
 .rcard.owned.rarity-sr .kcard-shine {
   animation: holo 2.8s linear infinite;
+}
+
+.rcard.owned.rarity-ssr {
+  border: 3px solid transparent;
+  border-image: linear-gradient(140deg, #ff5d73, #ffd54d, #5ef28a, #8ecbff, #c98af2, #ff5d73) 1;
+  box-shadow: 0 0 18px rgba(200, 160, 255, 0.55);
+}
+
+.rcard.owned.rarity-ssr .kcard-shine {
+  background: linear-gradient(
+    120deg,
+    transparent 20%,
+    rgba(255, 120, 160, 0.25) 35%,
+    rgba(255, 240, 150, 0.3) 45%,
+    rgba(140, 240, 170, 0.25) 55%,
+    rgba(150, 200, 255, 0.3) 65%,
+    transparent 80%
+  );
+  animation: holo 2s linear infinite;
+}
+
+.rcard.rarity-ssr .rcard-rarity {
+  color: #fff;
+  background: linear-gradient(140deg, #ff5d73, #b06cf2);
 }
 
 @keyframes holo {

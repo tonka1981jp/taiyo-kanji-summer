@@ -119,6 +119,30 @@ const CATEGORIES = {
       { theme: "sparkle", name: "reward", desc: "a cluster of celebratory golden sparkles" },
     ],
   },
+  creatures: {
+    // レアカード用クリーチャー(バトル敵としても将来使える)
+    size: "1024x1024",
+    background: "transparent",
+    template: (item) =>
+      `${STYLE_LOCK} Draw a single fantasy creature: ${item.desc}. ` +
+      "Full body, centered composition, clean outline, " + CHROMA_BG + " " +
+      "front-facing or slightly angled, a collectible-card hero pose.",
+    items: [
+      { theme: "crystal", name: "crystal_fox", desc: "a graceful fox made of glowing blue crystal" },
+      { theme: "crystal", name: "cave_bat", desc: "a chubby friendly cave bat with big round eyes" },
+      { theme: "mountain", name: "rock_turtle", desc: "a sturdy turtle with a mossy rock shell" },
+      { theme: "volcano", name: "lava_lizard", desc: "a playful little lizard with glowing lava patterns" },
+      { theme: "sky", name: "cloud_sheep", desc: "a fluffy sheep made of white clouds" },
+      { theme: "sky", name: "thunder_chick", desc: "a tiny yellow chick crackling with cute lightning sparks" },
+      { theme: "sky", name: "sky_whale", desc: "a majestic gentle whale swimming through the sky with small floating islands on its back" },
+      { theme: "star", name: "star_jelly", desc: "a translucent jellyfish glowing with tiny stars" },
+      { theme: "snow", name: "ice_yeti", desc: "a big fluffy friendly yeti with icy blue fur" },
+      { theme: "ghost", name: "ghost_lantern", desc: "a cute round ghost holding a warm glowing lantern, friendly not spooky" },
+      { theme: "gold", name: "golden_slime", desc: "a shiny golden slime with a tiny crown, sparkling" },
+      { theme: "legend", name: "word_phoenix", desc: "a legendary phoenix with feathers like glowing brush strokes of ink and fire" },
+      { theme: "legend", name: "rainbow_dragon", desc: "a legendary majestic dragon with iridescent rainbow scales, proud and dazzling" },
+    ],
+  },
   cardbg: {
     size: "1024x1536",
     background: "opaque",
@@ -264,6 +288,7 @@ async function main() {
     bosses: "boss",
     backgrounds: "bg",
     cardbg: "card",
+    creatures: "creature",
     ui: "ui",
     effects: "fx",
     player: "player",

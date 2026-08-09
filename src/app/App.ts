@@ -10,7 +10,13 @@ import {
 import { ENEMY_MAP } from "../data/enemies";
 import { QUESTION_POOLS } from "../data/questions";
 import { STAGES, nextUnclearedStage } from "../data/stages";
-import { rareCardById, type RareCardDef } from "../data/cards";
+import {
+  DROP_RATES,
+  RARE_CARDS,
+  rareCardById,
+  type Rarity,
+  type RareCardDef,
+} from "../data/cards";
 import { AudioManager } from "../infrastructure/audio/AudioManager";
 import { detectSpeechSupport } from "../infrastructure/speech/SpeechSupportDetector";
 import { WebSpeechRecognizer } from "../infrastructure/speech/WebSpeechRecognizer";
@@ -111,19 +117,29 @@ export class App {
     });
   }
 
-  /** そのステージに出た敵からドロップ。未所持を優先し、初回はボス(SR)を確定で渡す */
+  /**
+   * 宝箱ドロップ抽選。
+   * 1) そのステージのボスカードが未所持なら確定ドロップ(初回クリア報酬)
+   * 2) 以降は全20種からレアリティ抽選(R70% / SR24% / SSR6%)。
+   *    同レアリティ内では未所持を優先して収集が進むようにする
+   */
   private pickRareDrop(stage: StageDefinition): RareCardDef | null {
-    const cards = [...new Set(stage.encounters.map((e) => e.enemyId))]
-      .map((id) => rareCardById(id))
-      .filter((c): c is RareCardDef => c !== undefined);
-    if (cards.length === 0) return null;
-
-    const unowned = cards.filter((c) => !this.collection.rareState(c.id));
-    if (unowned.length > 0) {
-      const sr = unowned.filter((c) => c.rarity === "SR");
-      const pool = sr.length > 0 ? sr : unowned;
-      return pool[Math.floor(Math.random() * pool.length)];
+    const bossEncounter = stage.encounters.find((e) => e.isBoss);
+    if (bossEncounter) {
+      const bossCard = rareCardById(bossEncounter.enemyId);
+      if (bossCard && !this.collection.rareState(bossCard.id)) {
+        return bossCard;
+      }
     }
-    return cards[Math.floor(Math.random() * cards.length)];
+
+    const roll = Math.random();
+    const rarity: Rarity =
+      roll < DROP_RATES.SSR ? "SSR" : roll < DROP_RATES.SSR + DROP_RATES.SR ? "SR" : "R";
+
+    const candidates = RARE_CARDS.filter((c) => c.rarity === rarity);
+    if (candidates.length === 0) return null;
+    const unowned = candidates.filter((c) => !this.collection.rareState(c.id));
+    const pool = unowned.length > 0 ? unowned : candidates;
+    return pool[Math.floor(Math.random() * pool.length)];
   }
 }
