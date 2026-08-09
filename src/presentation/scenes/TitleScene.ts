@@ -3,7 +3,7 @@ import type { PlayerProgress } from "../../domain/progression/PlayerProgress";
 import type { AudioManager } from "../../infrastructure/audio/AudioManager";
 import type { SpeechSupportReport } from "../../infrastructure/speech/SpeechSupportDetector";
 import { ENEMY_SKINS } from "../../data/enemies";
-import { nextUnclearedStage } from "../../data/stages";
+import { WORLD_NAMES, nextUnclearedStage } from "../../data/stages";
 
 export interface TitleSceneProps {
   report: SpeechSupportReport;
@@ -22,23 +22,31 @@ export class TitleScene {
     const { report, progress, stages } = props;
     const nextStage = nextUnclearedStage(progress.clearedStageIds);
 
-    const stageRows = stages
-      .map((s) => {
-        const cleared = progress.clearedStageIds.includes(s.id);
-        const isNext = s.id === nextStage.id && !cleared;
-        // ステージの目玉 = 最後のエンカウント(ボス)をアイコンにする
-        const bossId = s.encounters[s.encounters.length - 1]?.enemyId;
-        const skin = bossId ? ENEMY_SKINS[bossId] : undefined;
-        const icon = skin?.image
-          ? `<img src="${skin.image}" alt="" draggable="false" />`
-          : (skin?.emoji ?? "👾");
-        return `
-          <button class="stage-card${isNext ? " next" : ""}" data-stage="${s.id}">
-            <span class="stage-card-icon">${icon}</span>
-            <span class="stage-card-name">${s.name}</span>
-            <span class="stage-card-mark">${cleared ? "⭐" : isNext ? "▶" : ""}</span>
-          </button>`;
-      })
+    const stageRow = (s: StageDefinition): string => {
+      const cleared = progress.clearedStageIds.includes(s.id);
+      const isNext = s.id === nextStage.id && !cleared;
+      // ステージの目玉 = 最後のエンカウント(ボス)をアイコンにする
+      const bossId = s.encounters[s.encounters.length - 1]?.enemyId;
+      const skin = bossId ? ENEMY_SKINS[bossId] : undefined;
+      const icon = skin?.image
+        ? `<img src="${skin.image}" alt="" draggable="false" />`
+        : (skin?.emoji ?? "👾");
+      return `
+        <button class="stage-card${isNext ? " next" : ""}" data-stage="${s.id}">
+          <span class="stage-card-icon">${icon}</span>
+          <span class="stage-card-name">${s.name}</span>
+          <span class="stage-card-mark">${cleared ? "⭐" : isNext ? "▶" : ""}</span>
+        </button>`;
+    };
+
+    const worldIds = [...new Set(stages.map((s) => s.worldId))];
+    const stageRows = worldIds
+      .map(
+        (wid) => `
+          <p class="stage-list-title">🗺 ${WORLD_NAMES[wid] ?? wid}</p>
+          ${stages.filter((s) => s.worldId === wid).map(stageRow).join("")}
+        `,
+      )
       .join("");
 
     this.root.innerHTML = `
@@ -65,7 +73,6 @@ export class TitleScene {
         }
 
         <div class="stage-list">
-          <p class="stage-list-title">🗺 WORLD 1 はじまりの草原</p>
           ${stageRows}
         </div>
 

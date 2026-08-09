@@ -368,6 +368,20 @@ body {
   color: var(--ink);
 }
 
+.battle-screen.world2 {
+  background:
+    url("/game/bg/world2.jpg") center / cover no-repeat,
+    linear-gradient(180deg, #2e4a33 0%, #1e3526 60%, #14261b 100%);
+  color: var(--ink);
+}
+
+/* 森は暗めなのでテキストは白+濃影に切り替える */
+.battle-screen.world2 .enemy-name,
+.battle-screen.world2 .hp-text {
+  color: #f2f4ff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+
 .battle-header {
   width: 100%;
   display: flex;

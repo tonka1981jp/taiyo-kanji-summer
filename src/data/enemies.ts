@@ -9,6 +9,8 @@ export const ENEMY_DEFINITIONS: EnemyDefinition[] = [
   { id: "mush_goblin", name: "キノコゴブリン" },
   { id: "grass_golem", name: "草原ゴーレム" },
   { id: "grass_dragon", name: "草原のぬし ドラゴン" },
+  { id: "wind_bird", name: "かぜのとり" },
+  { id: "elder_treant", name: "もりのぬし トレント" },
 ];
 
 export const ENEMY_MAP: Map<string, EnemyDefinition> = new Map(
@@ -43,5 +45,15 @@ export const ENEMY_SKINS: Record<string, EnemySkin> = {
     enemyId: "grass_dragon",
     image: "/game/enemies/grass_dragon.png",
     emoji: "🐉",
+  },
+  wind_bird: {
+    enemyId: "wind_bird",
+    image: "/game/enemies/wind_bird.png",
+    emoji: "🐦",
+  },
+  elder_treant: {
+    enemyId: "elder_treant",
+    image: "/game/enemies/elder_treant.png",
+    emoji: "🌳",
   },
 };
