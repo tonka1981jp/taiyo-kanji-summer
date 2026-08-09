@@ -22,9 +22,11 @@ import { detectSpeechSupport } from "../infrastructure/speech/SpeechSupportDetec
 import { WebSpeechRecognizer } from "../infrastructure/speech/WebSpeechRecognizer";
 import { IndexedDbSaveRepository } from "../infrastructure/storage/SaveRepository";
 import { CollectionStore } from "../infrastructure/storage/CollectionStore";
+import { SettingsStore } from "../infrastructure/storage/SettingsStore";
 import { BattleScene } from "../presentation/scenes/BattleScene";
 import { CollectionScene } from "../presentation/scenes/CollectionScene";
 import { ResultScene } from "../presentation/scenes/ResultScene";
+import { SettingsScene } from "../presentation/scenes/SettingsScene";
 import { TitleScene } from "../presentation/scenes/TitleScene";
 
 export class App {
@@ -32,6 +34,7 @@ export class App {
   private save = new IndexedDbSaveRepository();
   private audio = new AudioManager();
   readonly collection = new CollectionStore();
+  private settings = new SettingsStore();
   private progress: PlayerProgress = createInitialProgress();
   private controller: BattleController | null = null;
 
@@ -41,6 +44,10 @@ export class App {
   ) {}
 
   async boot(): Promise<void> {
+    this.audio.applySettings({
+      seVolume: this.settings.seVolume,
+      bgmVolume: this.settings.bgmVolume,
+    });
     const saved = await this.save.load();
     if (saved) this.progress = saved;
     this.showTitle();
@@ -54,6 +61,14 @@ export class App {
       collectionCount: this.collection.kanjiCount,
       onSelectStage: (stage) => this.startStage(stage),
       onOpenCollection: () => this.showCollection(),
+      onOpenSettings: () => this.showSettings(),
+    });
+  }
+
+  private showSettings(): void {
+    new SettingsScene(this.root, this.audio).mount({
+      settings: this.settings,
+      onBack: () => this.showTitle(),
     });
   }
 

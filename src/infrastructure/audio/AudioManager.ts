@@ -8,7 +8,7 @@ import { Sfx, type SoundId } from "./Sfx";
 export type BgmName = "title" | "world1" | "world2" | "boss";
 export type JingleName = "clear" | "treasure";
 
-const BGM_BASE_VOLUME = 0.55;
+
 /**
  * LISTENING 中の BGM 音量比。
  * 仕様書§17.2の目安(70〜85%)より意図的に深くしている:
@@ -19,11 +19,24 @@ const DUCK_RATIO = 0.45;
 export class AudioManager {
   readonly sfx = new Sfx();
 
+  /** BGM基準音量(設定画面から変更・localStorage保存) */
+  private bgmBase = 0.5;
+
   private els = new Map<string, HTMLAudioElement>();
   private missing = new Set<string>();
   private current: string | null = null;
   private ducked = false;
   private unlocked = false;
+
+  /** 設定を反映(起動時と設定画面の操作時) */
+  applySettings(settings: { seVolume: number; bgmVolume: number }): void {
+    this.sfx.masterVolume = settings.seVolume;
+    this.bgmBase = settings.bgmVolume;
+    if (this.current) {
+      const el = this.els.get(this.current);
+      if (el) el.volume = this.bgmVolume();
+    }
+  }
 
   /** ユーザージェスチャー内で必ず一度呼ぶ(iOS 解錠 + BGM要素のプライミング) */
   unlock(): void {
@@ -80,7 +93,7 @@ export class AudioManager {
     const el = this.el(name);
     el.loop = false;
     el.currentTime = 0;
-    el.volume = BGM_BASE_VOLUME;
+    el.volume = this.bgmBase;
     el.play().catch(() => {
       if (fallback) this.sfx.play(fallback);
     });
@@ -120,7 +133,7 @@ export class AudioManager {
   }
 
   private bgmVolume(): number {
-    return BGM_BASE_VOLUME * (this.ducked ? DUCK_RATIO : 1);
+    return this.bgmBase * (this.ducked ? DUCK_RATIO : 1);
   }
 
   private el(name: string): HTMLAudioElement {

@@ -13,6 +13,7 @@ export interface TitleSceneProps {
   collectionCount: number;
   onSelectStage: (stage: StageDefinition) => void;
   onOpenCollection: () => void;
+  onOpenSettings: () => void;
 }
 
 export class TitleScene {
@@ -75,9 +76,12 @@ export class TitleScene {
             : `<p class="fatal">このブラウザは音声認識に対応していません</p>`
         }
 
-        <button id="collection-btn" class="collection-btn">
-          📖 コレクション <span class="collection-badge">${props.collectionCount} / 102</span>
-        </button>
+        <div class="title-menu">
+          <button id="collection-btn" class="collection-btn">
+            📖 コレクション <span class="collection-badge">${props.collectionCount} / 102</span>
+          </button>
+          <button id="settings-btn" class="collection-btn settings-btn" aria-label="せってい">⚙</button>
+        </div>
 
         <div class="stage-list">
           ${stageRows}
@@ -113,6 +117,11 @@ export class TitleScene {
     this.root.querySelector("#collection-btn")?.addEventListener("click", () => {
       this.audio.play("ui.tap");
       props.onOpenCollection();
+    });
+
+    this.root.querySelector("#settings-btn")?.addEventListener("click", () => {
+      this.audio.play("ui.tap");
+      props.onOpenSettings();
     });
 
     this.root.querySelectorAll<HTMLButtonElement>(".stage-card").forEach((btn) => {
