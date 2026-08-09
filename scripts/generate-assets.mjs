@@ -23,10 +23,12 @@ const ROOT = path.resolve(new URL("..", import.meta.url).pathname);
 const OUT_DIR = path.join(ROOT, "assets", "concepts");
 
 // §13.1: 毎回入れるルック固定文
+// 「ピクセル風味はあるが古すぎない」= Modern Pixel Fantasy(アート仕様 §7)
 const STYLE_LOCK =
   "Smartphone fantasy RPG game asset for elementary school children. " +
-  "Modern pixel-fantasy style, bright colors, readable silhouette, not scary, " +
-  "cute but slightly cool, consistent game-asset look, polished quality.";
+  "Modern pixel-fantasy style: pixel-art flavor with smooth detailed shading, " +
+  "NOT extremely low-resolution 8-bit retro. Bright colors, readable silhouette, " +
+  "not scary, cute but slightly cool, consistent game-asset look, polished quality.";
 
 // §21.1: アセット種別ごとにテンプレートを分ける(§11)
 const CATEGORIES = {
@@ -135,6 +137,18 @@ async function nextVersion(prefix) {
   return max + 1;
 }
 
+async function requestImage(body, apiKey) {
+  const res = await fetch("https://api.openai.com/v1/images/generations", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+  return res;
+}
+
 async function generate(category, item, model, apiKey) {
   const prompt = category.template(item);
   const body = {
@@ -147,14 +161,17 @@ async function generate(category, item, model, apiKey) {
     body.background = "transparent";
   }
 
-  const res = await fetch("https://api.openai.com/v1/images/generations", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(body),
-  });
+  let res = await requestImage(body, apiKey);
+  if (!res.ok && body.background) {
+    // モデルが background パラメータ非対応の場合はプロンプト指定のみで再試行
+    const text = await res.text();
+    if (text.includes("background")) {
+      delete body.background;
+      res = await requestImage(body, apiKey);
+    } else {
+      throw new Error(`API error ${res.status}: ${text}`);
+    }
+  }
   if (!res.ok) {
     throw new Error(`API error ${res.status}: ${await res.text()}`);
   }
@@ -178,12 +195,21 @@ async function main() {
   const itemFilter = args.includes("--item")
     ? args[args.indexOf("--item") + 1]
     : null;
+  const themeFilter = args.includes("--theme")
+    ? args[args.indexOf("--theme") + 1]
+    : null;
   const count = args.includes("--count")
     ? Number(args[args.indexOf("--count") + 1])
     : 1;
+  // 透過が必要なアセットは background パラメータ対応の gpt-image-1、
+  // 背景画(不透過)は gpt-image-2 を既定にする。IMAGE_MODEL / --model で上書き可。
   const model =
     process.env.IMAGE_MODEL ??
-    (args.includes("--model") ? args[args.indexOf("--model") + 1] : "gpt-image-2");
+    (args.includes("--model")
+      ? args[args.indexOf("--model") + 1]
+      : CATEGORIES[categoryName]?.background === "transparent"
+        ? "gpt-image-1"
+        : "gpt-image-2");
 
   const category = CATEGORIES[categoryName];
   if (!category) {
@@ -200,16 +226,29 @@ async function main() {
 
   await mkdir(OUT_DIR, { recursive: true });
 
-  const items = category.items.filter((i) => !itemFilter || i.name === itemFilter);
+  const items = category.items.filter(
+    (i) =>
+      (!itemFilter || i.name === itemFilter) &&
+      (!themeFilter || i.theme === themeFilter),
+  );
   if (items.length === 0) {
-    console.error(`item が見つかりません: ${itemFilter}`);
+    console.error(`該当するアイテムがありません (item=${itemFilter}, theme=${themeFilter})`);
     process.exit(1);
   }
 
+  // 命名規則(§8)の接頭辞
+  const PREFIXES = {
+    enemies: "enemy",
+    bosses: "boss",
+    backgrounds: "bg",
+    ui: "ui",
+    effects: "fx",
+    player: "player",
+  };
+
   // §21.2: 1回の実行で1カテゴリのみ。アイテムは直列で生成(レート・ルック管理優先)
   for (const item of items) {
-    const singular = categoryName.replace(/s$/, "");
-    const prefix = `${singular}__${item.theme}__${item.name}`;
+    const prefix = `${PREFIXES[categoryName]}__${item.theme}__${item.name}`;
     for (let i = 0; i < count; i++) {
       const v = await nextVersion(prefix);
       const name = `${prefix}__v${String(v).padStart(2, "0")}.png`;
