@@ -10,6 +10,7 @@ import {
 import { ENEMY_MAP } from "../data/enemies";
 import { QUESTION_POOLS } from "../data/questions";
 import { STAGES, nextUnclearedStage } from "../data/stages";
+import { AudioManager } from "../infrastructure/audio/AudioManager";
 import { detectSpeechSupport } from "../infrastructure/speech/SpeechSupportDetector";
 import { WebSpeechRecognizer } from "../infrastructure/speech/WebSpeechRecognizer";
 import { IndexedDbSaveRepository } from "../infrastructure/storage/SaveRepository";
@@ -20,6 +21,7 @@ import { TitleScene } from "../presentation/scenes/TitleScene";
 export class App {
   private repo = new QuestionRepository(QUESTION_POOLS);
   private save = new IndexedDbSaveRepository();
+  private audio = new AudioManager();
   private progress: PlayerProgress = createInitialProgress();
   private controller: BattleController | null = null;
 
@@ -35,7 +37,7 @@ export class App {
   }
 
   private showTitle(): void {
-    new TitleScene(this.root).mount({
+    new TitleScene(this.root, this.audio).mount({
       report: detectSpeechSupport(),
       progress: this.progress,
       stages: STAGES,
@@ -46,7 +48,7 @@ export class App {
   private startStage(stage: StageDefinition): void {
     void this.controller?.destroy();
 
-    const scene = new BattleScene(this.root, this.debugMode);
+    const scene = new BattleScene(this.root, this.debugMode, this.audio);
     scene.mount(stage);
 
     this.controller = new BattleController({
@@ -77,7 +79,7 @@ export class App {
     const next = nextUnclearedStage(this.progress.clearedStageIds);
     const allCleared = this.progress.clearedStageIds.includes(next.id);
 
-    new ResultScene(this.root).mount({
+    new ResultScene(this.root, this.audio).mount({
       summary,
       nextStage: allCleared ? null : next,
       onNext: (s) => this.startStage(s),

@@ -1,5 +1,6 @@
 import type { StageDefinition } from "../../domain/battle/StageDefinition";
 import type { PlayerProgress } from "../../domain/progression/PlayerProgress";
+import type { AudioManager } from "../../infrastructure/audio/AudioManager";
 import type { SpeechSupportReport } from "../../infrastructure/speech/SpeechSupportDetector";
 import { nextUnclearedStage } from "../../data/stages";
 
@@ -11,7 +12,10 @@ export interface TitleSceneProps {
 }
 
 export class TitleScene {
-  constructor(private root: HTMLElement) {}
+  constructor(
+    private root: HTMLElement,
+    private audio: AudioManager,
+  ) {}
 
   mount(props: TitleSceneProps): void {
     const { report, progress, stages } = props;
@@ -54,14 +58,23 @@ export class TitleScene {
       </div>
     `;
 
+    // タイトルBGM(初回はブラウザの自動再生制限で無音。ジェスチャー後の再訪では鳴る)
+    this.audio.playBgm("title");
+
+    const select = (stage: StageDefinition): void => {
+      this.audio.unlock(); // ユーザージェスチャー内で iOS のオーディオを解錠
+      this.audio.play("ui.tap");
+      props.onSelectStage(stage);
+    };
+
     this.root
       .querySelector("#start-btn")
-      ?.addEventListener("click", () => props.onSelectStage(nextStage));
+      ?.addEventListener("click", () => select(nextStage));
 
     this.root.querySelectorAll<HTMLButtonElement>(".stage-row").forEach((btn) => {
       btn.addEventListener("click", () => {
         const stage = stages.find((s) => s.id === btn.dataset.stage);
-        if (stage) props.onSelectStage(stage);
+        if (stage) select(stage);
       });
     });
   }

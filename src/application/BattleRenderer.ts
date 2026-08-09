@@ -42,6 +42,12 @@ export interface BattleRenderer {
   showQuestion(text: string): void;
 
   setMic(state: MicState): void;
+  /**
+   * interim結果を受信した瞬間に呼ぶ。
+   * 「きこえてる！」を即座に見せることで、子どもが
+   * 「あれ、聞こえてないのかな」と答えを連呼するのを防ぐ。
+   */
+  showHearing(): void;
   showCorrect(): void;
   showRetry(reason: RetryReason): Promise<void>;
   showHint(text: string): Promise<void>;

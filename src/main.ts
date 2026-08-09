@@ -1,3 +1,5 @@
+import "@fontsource/dotgothic16";
+import "@fontsource/press-start-2p";
 import "./style.css";
 import { App } from "./app/App";
 

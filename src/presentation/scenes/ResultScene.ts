@@ -1,5 +1,6 @@
 import type { StageSummary } from "../../application/BattleRenderer";
 import type { StageDefinition } from "../../domain/battle/StageDefinition";
+import type { AudioManager } from "../../infrastructure/audio/AudioManager";
 
 export interface ResultSceneProps {
   summary: StageSummary;
@@ -9,10 +10,17 @@ export interface ResultSceneProps {
 }
 
 export class ResultScene {
-  constructor(private root: HTMLElement) {}
+  constructor(
+    private root: HTMLElement,
+    private audio: AudioManager,
+  ) {}
 
   mount(props: ResultSceneProps): void {
     const { summary, nextStage } = props;
+
+    // クリアジングル(Suno音源が無ければコード生成SEで代用)
+    this.audio.playJingle("clear", "stage.clear");
+    window.setTimeout(() => this.audio.play("reward.treasure"), 900);
     const minutes = Math.floor(summary.elapsedMs / 60000);
     const seconds = Math.round((summary.elapsedMs % 60000) / 1000);
 
@@ -37,10 +45,12 @@ export class ResultScene {
     `;
 
     this.root.querySelector("#next-btn")?.addEventListener("click", () => {
+      this.audio.play("ui.tap");
       if (nextStage) props.onNext(nextStage);
     });
-    this.root
-      .querySelector("#title-btn")
-      ?.addEventListener("click", () => props.onTitle());
+    this.root.querySelector("#title-btn")?.addEventListener("click", () => {
+      this.audio.play("ui.tap");
+      props.onTitle();
+    });
   }
 }

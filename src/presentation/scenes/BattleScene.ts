@@ -7,15 +7,14 @@ import type {
 import type { RetryReason } from "../../domain/battle/BattleEvent";
 import type { StageDefinition } from "../../domain/battle/StageDefinition";
 import { ENEMY_SKINS } from "../../data/enemies";
+import type { AudioManager } from "../../infrastructure/audio/AudioManager";
 
-// 仕様書 §12 レイアウト / §57 BattleRenderer 実装。
-// 学習内容は一切判断しない(§4.2)。イベントを受けて再生するだけ。
-
-const MIC_LABELS: Record<MicState, string> = {
-  listening: "🎙 きいています",
-  evaluating: "✨ はんてい中",
-  off: "…",
-};
+// アート仕様書 §14 レイアウト / BattleRenderer 実装。
+// 学習内容は一切判断しない。イベントを受けて再生するだけ。
+//
+// マイク状態は「小4が迷わない」ことを最優先にした2値設計:
+//   みどり = いま しゃべっていい / それ以外 = まってて
+// さらに interim 受信で「きこえてる！」を即表示し、答えの連呼を防ぐ。
 
 const RETRY_LABELS: Record<RetryReason, string> = {
   ambiguous: "👂 もういちど きかせて！",
@@ -37,9 +36,11 @@ export class BattleScene implements BattleRenderer {
   private hpTextEl!: HTMLElement;
   private damageEl!: HTMLElement;
   private slashEl!: HTMLElement;
+  private cardEl!: HTMLElement;
   private kanjiEl!: HTMLElement;
   private hintEl!: HTMLElement;
   private micEl!: HTMLElement;
+  private micLabelEl!: HTMLElement;
   private flashEl!: HTMLElement;
   private comboEl!: HTMLElement;
   private debugEl: HTMLElement | null = null;
@@ -47,14 +48,18 @@ export class BattleScene implements BattleRenderer {
   constructor(
     private root: HTMLElement,
     private debugMode: boolean,
+    private audio: AudioManager,
   ) {}
 
   mount(stage: StageDefinition): void {
     this.root.innerHTML = `
-      <div class="screen battle-screen">
+      <div class="screen battle-screen ${stage.worldId}">
+        <div class="cloud cloud-a">☁️</div>
+        <div class="cloud cloud-b">☁️</div>
+
         <header class="battle-header">
-          <span id="stage"></span>
-          <span id="encounter"></span>
+          <span id="stage" class="chip"></span>
+          <span id="encounter" class="chip"></span>
         </header>
 
         <div class="enemy-area" id="enemy-area">
@@ -66,13 +71,19 @@ export class BattleScene implements BattleRenderer {
           <div id="damage" class="damage-popup"></div>
         </div>
 
-        <div class="kanji-card">
+        <div id="flash" class="flash"></div>
+
+        <div class="kanji-card" id="kanji-card">
           <div id="kanji" class="kanji"></div>
           <div id="hint" class="hint"></div>
         </div>
 
-        <div id="mic" class="mic-state"></div>
-        <div id="flash" class="flash"></div>
+        <div id="mic" class="mic-banner">
+          <span class="mic-icon">🎙</span>
+          <span id="mic-label"></span>
+          <span class="hear-bars"><i></i><i></i><i></i></span>
+        </div>
+
         <div id="combo" class="combo"></div>
 
         ${this.debugMode ? `<div id="debug-hud" class="debug-hud"></div>` : ""}
@@ -88,9 +99,11 @@ export class BattleScene implements BattleRenderer {
     this.hpTextEl = this.q("#hp-text");
     this.damageEl = this.q("#damage");
     this.slashEl = this.q("#slash");
+    this.cardEl = this.q("#kanji-card");
     this.kanjiEl = this.q("#kanji");
     this.hintEl = this.q("#hint");
     this.micEl = this.q("#mic");
+    this.micLabelEl = this.q("#mic-label");
     this.flashEl = this.q("#flash");
     this.comboEl = this.q("#combo");
     this.debugEl = this.debugMode ? this.q("#debug-hud") : null;
@@ -106,6 +119,7 @@ export class BattleScene implements BattleRenderer {
   // ---------- BattleRenderer ----------
 
   async showEncounter(info: EncounterInfo): Promise<void> {
+    this.audio.playBgm(info.isBoss ? "boss" : "world");
     const skin = ENEMY_SKINS[info.enemyId];
     this.encounterEl.textContent = `${info.index + 1} / ${info.total}`;
     this.enemyEmojiEl.textContent = skin?.emoji ?? "👾";
@@ -120,6 +134,7 @@ export class BattleScene implements BattleRenderer {
   }
 
   showQuestion(text: string): void {
+    this.audio.play("quiz.show");
     this.kanjiEl.textContent = text;
     this.kanjiEl.classList.remove("pop");
     void this.kanjiEl.offsetWidth;
@@ -130,23 +145,53 @@ export class BattleScene implements BattleRenderer {
     this.clearDebugTranscript();
   }
 
+  /**
+   * マイク状態は2値で伝える:
+   *   listening(みどり) = いま しゃべっていい
+   *   それ以外(グレー/きいろ) = まってて
+   */
   setMic(state: MicState): void {
-    this.micEl.textContent = MIC_LABELS[state];
     this.micEl.dataset.state = state;
+    this.cardEl.classList.toggle("speak-now", state === "listening");
+    switch (state) {
+      case "listening":
+        this.micLabelEl.textContent = "いま！ こえで こうげき！";
+        this.audio.setDucked(true);
+        this.audio.play("mic.on");
+        break;
+      case "evaluating":
+        this.micLabelEl.textContent = "はんてい中…";
+        this.audio.setDucked(false);
+        break;
+      case "off":
+        this.micLabelEl.textContent = "ちょっと まってね";
+        this.audio.setDucked(false);
+        break;
+    }
+  }
+
+  showHearing(): void {
+    // listening 中のみ「きこえてる！」へ(まだしゃべって良い=みどりのまま)
+    if (this.micEl.dataset.state !== "listening" && this.micEl.dataset.state !== "hearing") {
+      return;
+    }
+    this.micEl.dataset.state = "hearing";
+    this.micLabelEl.textContent = "きこえてるよ…！";
   }
 
   showCorrect(): void {
+    this.audio.play("answer.correct");
     this.flash("せいかい！", "correct");
   }
 
   async showRetry(reason: RetryReason): Promise<void> {
-    // §35: STTが何と認識したかは本番UIには出さない(❌も出さない §59 NG2)
+    this.audio.play("answer.retry");
     this.flash(RETRY_LABELS[reason], reason === "incorrect" ? "retry" : "prompt");
-    this.micEl.dataset.state = "retry";
     await delay(600);
   }
 
   async showHint(text: string): Promise<void> {
+    this.audio.play("answer.retry");
     this.flash("おしい！ ヒント！", "retry");
     this.hintEl.textContent = text;
     await delay(700);
@@ -169,7 +214,8 @@ export class BattleScene implements BattleRenderer {
   }
 
   async playAttack(damage: number, critical: boolean): Promise<void> {
-    // 斬撃(§19: 通常0.4〜0.9秒)
+    this.audio.play(critical ? "battle.critical" : "battle.slash");
+
     this.slashEl.classList.remove("play");
     void this.slashEl.offsetWidth;
     this.slashEl.classList.add("play");
@@ -178,7 +224,7 @@ export class BattleScene implements BattleRenderer {
     void this.enemyEmojiEl.offsetWidth;
     this.enemyEmojiEl.classList.add("hit");
 
-    this.damageEl.textContent = critical ? `CRITICAL! ${damage}` : `${damage} DAMAGE`;
+    this.damageEl.textContent = critical ? `CRITICAL! ${damage}` : `${damage}`;
     this.damageEl.classList.toggle("critical", critical);
     this.damageEl.classList.remove("show");
     void this.damageEl.offsetWidth;
@@ -201,7 +247,7 @@ export class BattleScene implements BattleRenderer {
   }
 
   updateCombo(combo: number): void {
-    this.comboEl.textContent = combo >= 2 ? `${combo} COMBO!` : "";
+    this.comboEl.textContent = combo >= 2 ? `${combo} COMBO` : "";
     if (combo >= 2) {
       this.comboEl.classList.remove("pop");
       void this.comboEl.offsetWidth;
@@ -210,6 +256,7 @@ export class BattleScene implements BattleRenderer {
   }
 
   async playEnemyDefeat(name: string): Promise<void> {
+    this.audio.play("enemy.defeat");
     this.flash(`${name}を たおした！`, "defeated");
     this.enemyEmojiEl.classList.add("defeated");
     await delay(900);

@@ -114,7 +114,13 @@ export class BattleController {
     if (this.speechDetectedAt === undefined && result.transcript.trim() !== "") {
       this.speechDetectedAt = Date.now();
     }
-    if (!result.isFinal) return;
+    if (!result.isFinal) {
+      // 声が届いていることを即フィードバック(答えの連呼防止)
+      if (result.transcript.trim() !== "") {
+        this.deps.renderer.showHearing();
+      }
+      return;
+    }
     void this.handleFinal(result);
   }
 
